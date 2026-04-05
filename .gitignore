@@ -1,0 +1,49 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Node / package managers
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnp.*
+.npm/
+.yarn/
+
+# Build output
+dist/
+build/
+out/
+*.tsbuildinfo
+.turbo/
+.next/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE / editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs and caches
+logs/
+*.log
+coverage/
+.nyc_output/
+.cache/
+.eslintcache
+
+# Clawstore local dev artifacts (scratch workspaces, tarballs, staging dirs)
+.clawstore/
+*.tgz
+scratch/
+tmp/
