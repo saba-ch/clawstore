@@ -54,7 +54,7 @@ Two Cloudflare Workers, one D1 database, one R2 bucket, one KV namespace. Everyt
 | Auth | Better Auth via `better-auth-cloudflare` — GitHub OAuth, D1 session store, KV rate limiting |
 | Database | Cloudflare D1 (SQLite) + Drizzle ORM |
 | Object store | Cloudflare R2 (tarballs + extracted assets) |
-| CLI | Node 20 + Citty + tsup, published to npm as `clawstore` |
+| CLI | Node 20 + Commander + `@clack/prompts` + tsup, published to npm as `clawstore` |
 | Validator | Ajv-based JSON Schema + custom rules, shared between CLI and API |
 | Monorepo | pnpm workspaces + Turborepo |
 | Search (MVP) | Drizzle `LIKE` queries on indexed columns — no FTS5, see [Data Model](data-model.md) |
@@ -112,5 +112,12 @@ Cloudflare D1 is the launch database because it's cheapest, closest to the Worke
 - [Agent Package](agent-package.md) — the unit Clawstore distributes: layout, `agent.json`, what ships, versioning
 - [Backend API](backend-api.md) — REST surface, auth, routes, rate limits
 - [Data Model](data-model.md) — D1 schema sketch, immutability rules, migration-safe conventions
+- [Publish Flow](publish-flow.md) — author experience from `clawstore init` to live on the store
+- [Install Flow](install-flow.md) — operator experience for install, uninstall, and doctor
+- [Update and Rollback](update-and-rollback.md) — update detection, diffing, snapshots, atomic apply, rollback, failure modes
+- [CLI Reference](cli.md) — command surface by persona, exit codes, base URL
+- [Auth and Ownership](auth-and-ownership.md) — GitHub OAuth, session and token flows, scope derivation, the owner claim
+- [Trust and Moderation](trust-and-moderation.md) — what Clawstore enforces, what it doesn't, and how reports are handled
+- [OpenClaw Integration](openclaw-integration.md) — every OpenClaw CLI surface and filesystem convention Clawstore depends on
 
-Additional docs still lives in the archived plan at [`archive/PLAN-2026-04.md`](archive/PLAN-2026-04.md) and will migrate to topical docs as the corresponding code lands: publish flow, install flow, update and rollback, CLI surface, auth and ownership, trust and moderation, OpenClaw integration.
+The original implementation plan is archived at [`archive/PLAN-2026-04.md`](archive/PLAN-2026-04.md) for historical reference.

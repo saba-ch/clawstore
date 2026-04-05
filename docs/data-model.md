@@ -1,6 +1,6 @@
 # Data Model
 
-Clawstore's database is Cloudflare D1 (SQLite). The schema lives in `packages/db/src/schema.ts` and is defined with Drizzle ORM's SQLite dialect. This document sketches every table, its fields, and the integrity rules that matter operationally.
+Clawstore's database is Cloudflare D1 (SQLite). The schema lives inside the API Worker at `apps/api/src/db/schema.ts` and is defined with Drizzle ORM's SQLite dialect — there is no separate `packages/db` workspace. D1 bindings, migrations, and query code all live with the API because that Worker is the only code path that touches the database. This document sketches every table, its fields, and the integrity rules that matter operationally.
 
 Two classes of tables coexist in the same database:
 
