@@ -1,17 +1,28 @@
-# Clawstore — Implementation Plan
+# Clawstore - Implementation Plan
 
-This document is the implementation plan for Clawstore, a third-party app store for [openclaw](https://github.com/openclaw/openclaw) agents. Publish and update lifecycles are worked out in depth because those are the mechanics that make or break an app-store-like experience. Install and uninstall are covered but lighter.
+This document is the implementation plan for Clawstore, a third-party app store for [OpenClaw](https://github.com/openclaw/openclaw) agents. The product goal is simple: ship complete agents the way an app store ships apps, while keeping executable dependencies separate.
+
+Clawstore distributes the agent app.
+ClawHub and native OpenClaw flows distribute the dependencies.
+
+That separation is the whole point of the design:
+
+- Clawstore packages are inert, inspectable content.
+- Skills and plugins remain external dependencies.
+- OpenClaw stays the runtime and system of record for agent registration, workspace loading, plugin installation, skills installation, and secrets/config wiring.
+
+Publish and update lifecycles are worked out in depth because those are the mechanics that make or break trust in an app-store-like experience.
 
 ---
 
 ## 1. Architecture overview
 
 ```
-┌─────────────────┐         ┌──────────────────┐        ┌──────────────────┐
-│  Bundle author  │  PR     │  Registry repo   │   CI   │  catalog.json    │
-│  local machine  │────────▶│  (github monorepo│───────▶│  + per-bundle    │
-│  clawstore CLI  │         │   of bundles)    │        │  JSON blobs      │
-└─────────────────┘         └──────────────────┘        └──────────────────┘
+┌──────────────────┐        ┌──────────────────┐        ┌──────────────────┐
+│ Package author   │  PR    │ Registry repo    │  CI    │ catalog.json     │
+│ local machine    │───────▶│ (GitHub monorepo)│───────▶│ + per-package    │
+│ clawstore CLI    │        │                  │        │ JSON blobs       │
+└──────────────────┘        └──────────────────┘        └──────────────────┘
                                                                   │
                                                                   │ CDN / Pages
                                                                   ▼
@@ -20,63 +31,136 @@ This document is the implementation plan for Clawstore, a third-party app store 
                                                           │  (static site) │
                                                           └────────────────┘
                                                                   │
-                                                                  │ copy-paste
+                                                                  │ install
                                                                   ▼
-┌─────────────────┐         ┌──────────────────┐        ┌──────────────────┐
-│  End user       │         │  clawstore CLI   │        │  openclaw        │
-│  `clawstore     │────────▶│  installer       │───────▶│  (plugin install,│
-│   install X`    │         │  (glue)          │        │   agents add)    │
-└─────────────────┘         └──────────────────┘        └──────────────────┘
+┌──────────────────┐        ┌──────────────────┐        ┌─────────────────────────┐
+│ End user         │        │ clawstore CLI    │        │ OpenClaw + ClawHub      │
+│ `clawstore       │───────▶│ installer/update │───────▶│ agents, plugins, skills │
+│ install X`       │        │ glue             │        │ secrets, runtime        │
+└──────────────────┘        └──────────────────┘        └─────────────────────────┘
 ```
 
 Six parts, all independently shippable:
 
-1. **Bundle format** — the contract between authors and the registry. A directory with a `bundle.json` manifest.
-2. **Registry repo** — a public GitHub monorepo of bundles. Publish = PR.
-3. **Catalog builder** — CI job that walks the registry, validates bundles, produces `catalog.json` + per-bundle detail blobs.
-4. **Discovery website** — static site that reads the catalog and renders browse, search, and detail pages.
-5. **Clawstore CLI** — local tool for authors (`validate`, `pack`, `preview`, `publish`) and end users (`install`, `update`, `uninstall`, `doctor`, `rollback`).
-6. **Install glue** — the part of the CLI that translates a bundle install into the right sequence of openclaw public CLI calls.
+1. **Agent package format** - the contract between authors and the registry.
+2. **Registry repo** - a public GitHub monorepo of versioned agent packages. Publish = PR.
+3. **Catalog builder** - CI job that walks the registry, validates packages, and produces `catalog.json` plus per-package detail blobs.
+4. **Discovery website** - static site that reads the catalog and renders browse, search, and detail pages.
+5. **Clawstore CLI** - local tool for authors (`validate`, `pack`, `preview`, `publish`) and operators (`install`, `update`, `uninstall`, `doctor`, `rollback`).
+6. **Install glue** - the part of the CLI that translates an agent package install into the correct sequence of OpenClaw and ClawHub actions.
 
-Clawstore owns all six. None of them patch openclaw core.
+Clawstore owns all six. None of them patch OpenClaw core.
+
+### Product boundary
+
+This is the key product decision:
+
+- **Clawstore ships agent apps.**
+- **ClawHub ships skills and plugins.**
+- **OpenClaw runs the installed agent.**
+
+That means a package can declare:
+
+- required plugins
+- optional plugins
+- required skills
+- optional skills
+- provider prerequisites
+- setup steps such as secrets/config targets
+
+But the package itself cannot contain vendored plugins, vendored skills, or executable runtime code.
+
+The operator should experience this like a normal app install:
+
+1. Install the agent package.
+2. Review the dependencies it needs.
+3. Approve installation of those dependencies from their own source of truth.
+4. Start using the agent.
 
 ---
 
-## 2. Bundle format (recap)
+## 2. Agent package format
 
-Freeform directory layout owned by the author. Only requirement is a `bundle.json` manifest at the root.
+The unit Clawstore distributes is a complete **agent package**.
 
-### Example bundle
+An agent package is not "a skill bundle with extra markdown." It is the vendor-managed portion of a full OpenClaw agent product:
+
+- store metadata
+- persona and operating instructions
+- vendor-managed workspace files
+- dependency declarations
+- setup requirements
+- install/update metadata
+
+### What the package owns
+
+The package owns the files that should be installed or updated as part of the app itself.
+
+Examples:
+
+- `AGENTS.md`
+- `SOUL.md`
+- `TOOLS.md`
+- `IDENTITY.md`
+- curated reference markdown
+- JSON or CSV data files
+- screenshots and icon assets for the store
+
+### What the package does not own
+
+The package does not own:
+
+- plugins
+- ClawHub skills
+- executable code
+- user state
+- secrets
+- OpenClaw session/auth state
+
+Those are declared or referenced, not bundled.
+
+### Workspace model
+
+Clawstore should think in terms of a vendor-managed workspace tree, not only the four canonical files.
+
+The package installs a set of vendor-managed files into the target workspace.
+Some of those files are mounted to OpenClaw's canonical bootstrap filenames at the workspace root.
+Other files are copied as supporting content under their relative paths.
+
+User-managed files are explicitly excluded from package ownership and preserved across updates and uninstalls.
+
+### Package layout
+
+Freeform directory layout owned by the author. The only hard requirement is a manifest at the root.
+
+### Example package
 
 ```
 calorie-coach/
-├── bundle.json
-├── icon.png
-├── screenshots/
-│   ├── chat.png
-│   └── daily-log.png
-├── rules/
-│   ├── core.md
-│   ├── nutrition.md
-│   └── safety.md
-├── personality.md
-├── tools-guide.md
-├── who-i-am.md
-├── knowledge/
-│   ├── foods/
-│   │   ├── fruits.md
-│   │   ├── grains.md
-│   │   └── restaurants.md
-│   └── nutrition/
-│       ├── macros.md
-│       └── micros.md
-├── data/
-│   └── portion-sizes.json
-└── prompts/
-    └── morning-checkin.md
+├── agent.json
+├── app/
+│   ├── AGENTS.md
+│   ├── SOUL.md
+│   ├── TOOLS.md
+│   ├── IDENTITY.md
+│   ├── knowledge/
+│   │   ├── foods/
+│   │   │   ├── fruits.md
+│   │   │   ├── grains.md
+│   │   │   └── restaurants.md
+│   │   └── nutrition/
+│   │       ├── macros.md
+│   │       └── micros.md
+│   └── data/
+│       └── portion-sizes.json
+└── store/
+    ├── icon.png
+    └── screenshots/
+        ├── chat.png
+        └── daily-log.png
 ```
 
-### bundle.json
+### `agent.json`
 
 ```json
 {
@@ -93,79 +177,106 @@ calorie-coach/
   "homepage": "https://...",
   "repository": "https://github.com/...",
 
-  "roles": {
-    "AGENTS.md": {
-      "compose": [
-        { "file": "rules/core.md" },
-        { "file": "rules/nutrition.md" },
-        { "file": "rules/safety.md" }
-      ]
-    },
-    "SOUL.md":     { "from": "personality.md" },
-    "TOOLS.md":    { "from": "tools-guide.md" },
-    "IDENTITY.md": { "from": "who-i-am.md" }
-  },
-
-  "include": ["**/*"],
-  "exclude": ["README.md", "LICENSE", ".git/**", "node_modules/**", "bundle.json"],
-
   "agent": {
     "defaults": {
-      "model": "sonnet-4.6",
+      "model": "openai/gpt-5.4",
       "thinking": "low"
     }
   },
 
-  "requires": {
-    "openclaw": ">=0.x",
-    "plugins": [
-      { "spec": "@someone/nutrition-api", "source": "npm", "minVersion": "1.2.0" },
-      { "spec": "@someone/image-vision",  "source": "npm" }
-    ],
-    "provider": { "any": ["anthropic", "openai"] },
-    "secrets": [
-      { "name": "NUTRITIONIX_API_KEY", "prompt": "Nutritionix API key", "required": true }
+  "workspace": {
+    "vendorFiles": ["app/**"],
+    "mount": {
+      "AGENTS.md": "app/AGENTS.md",
+      "SOUL.md": "app/SOUL.md",
+      "TOOLS.md": "app/TOOLS.md",
+      "IDENTITY.md": "app/IDENTITY.md"
+    },
+    "preserve": [
+      "MEMORY.md",
+      "notes/**",
+      "data/user/**"
     ]
   },
 
-  "permissions": {
-    "tools": ["read", "write", "http"],
-    "channels": []
+  "dependencies": {
+    "plugins": [
+      { "spec": "clawhub:@someone/nutrition-api", "required": true, "minVersion": "1.2.0" },
+      { "spec": "@someone/image-vision", "required": false }
+    ],
+    "skills": [
+      { "slug": "food-search", "required": false }
+    ],
+    "providers": {
+      "any": ["anthropic", "openai"]
+    }
+  },
+
+  "setup": {
+    "secrets": [
+      {
+        "key": "NUTRITIONIX_API_KEY",
+        "prompt": "Nutritionix API key",
+        "required": true,
+        "target": "env"
+      }
+    ]
   },
 
   "store": {
-    "icon": "icon.png",
-    "screenshots": ["screenshots/*.png"]
+    "category": "health-fitness",
+    "tags": ["nutrition", "tracking", "wellness"],
+    "icon": "store/icon.png",
+    "screenshots": ["store/screenshots/*.png"]
   }
 }
 ```
 
-### Role mapping rules
+### Manifest semantics
 
-- If `roles` is omitted, the installer expects `AGENTS.md`, `SOUL.md`, `TOOLS.md`, `IDENTITY.md` to exist at the bundle root with those exact names. Zero-config path.
-- `roles.<TARGET>.from` copies a single file to the target filename at workspace root.
-- `roles.<TARGET>.compose` concatenates a list of files (in order) with a blank line between, writes result to the target filename at workspace root.
-- Every file referenced in `roles` must exist in the bundle. Validator error if not.
+- `workspace.vendorFiles` defines the package-owned tree.
+- `workspace.mount` maps package files to OpenClaw's canonical workspace filenames.
+- `workspace.preserve` declares paths Clawstore must never overwrite or delete.
+- `dependencies.plugins` declares plugins to install separately through OpenClaw.
+- `dependencies.skills` declares skills to install separately through ClawHub / OpenClaw skills flows.
+- `setup.secrets` declares setup requirements and target semantics. The package never stores secret values.
 
-### Include/exclude rules
+### Dependency contract
 
-- Defaults: `include: ["**/*"]`, `exclude: [".git/**", "node_modules/**", "bundle.json", "README.md", "LICENSE"]`.
-- Anything matched by `include` and not `exclude` gets copied into the workspace at its relative path.
-- Files named in `roles.*.from` / `roles.*.compose` are NOT also copied under their original names — they only land at the role target filename.
-- `bundle.json` and `store.*` files are never copied into the workspace (store-only).
+Dependencies are outside the package trust boundary.
+
+- A required plugin may block install if missing.
+- An optional plugin may be offered during install.
+- A required skill may block install or prompt for installation.
+- An optional skill should be offered but never silently installed without consent.
+
+Clawstore should show these as external dependencies, not as package contents.
 
 ### What ships, what doesn't
 
 - **Allowed**: markdown, JSON, YAML, CSV, TSV, plain text, images (PNG/JPG/SVG/WebP), TOML.
-- **Flagged (warning)**: PDFs and other binaries the agent can't consume without a plugin.
-- **Rejected by registry CI**: any file with executable permission bits set, any file whose magic bytes match a known executable format (ELF, Mach-O, PE), any `.sh` / `.bash` / `.zsh` / `.js` / `.ts` / `.py` / `.rb` / `.php` / `.exe`.
-- **Size limit**: 100 MB per bundle, 10,000 files per bundle, 1 MB per individual text file (soft warning), 10 MB per asset file.
+- **Flagged**: PDFs or opaque binaries the agent cannot consume without a declared dependency.
+- **Rejected by registry CI**: executable files, files with executable permission bits set, and blocked code-bearing extensions such as `.sh`, `.bash`, `.zsh`, `.js`, `.ts`, `.py`, `.rb`, `.php`, `.exe`.
+- **Size limit**: 100 MB per package, 10,000 files per package, 1 MB per text file as a soft warning, 10 MB per asset file.
+
+### User-state boundary
+
+This is a hard rule:
+
+- `MEMORY.md` is not package-owned.
+- notes, logs, and user data directories are not package-owned unless explicitly declared otherwise.
+- package updates may replace vendor-managed files only.
+- uninstall must offer to preserve user-managed files by default.
 
 ### Versioning
 
 - Semver. `MAJOR.MINOR.PATCH`.
-- Breaking = role files changed in a way that invalidates user expectations, secrets added, required plugins added, license changed.
-- Registry rejects a PR whose `version` is ≤ the current published version for the same `id`.
+- Breaking = behavior changed in a way that invalidates user expectations, required dependencies were added or changed incompatibly, required setup changed incompatibly, or the package license changed.
+- Registry rejects a PR whose `version` is less than or equal to the current published version for the same `id`.
+
+### Terminology note
+
+Earlier drafts of this project used the word "bundle" heavily. Going forward, the intended abstraction is **agent package**. Where the rest of this document still says "bundle", read it as "the packaged agent artifact" rather than "a skill-like content pack".
 
 ---
 
