@@ -37,18 +37,17 @@ function HomePage() {
       <section className="relative overflow-hidden border-b border-neutral-800/40">
         <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 via-transparent to-transparent pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-amber-500/8 via-transparent to-transparent pointer-events-none" />
+        <img
+          src="/favicon.svg"
+          alt=""
+          aria-hidden="true"
+          className="absolute -right-10 -bottom-16 w-72 h-72 opacity-[0.04] pointer-events-none select-none hidden lg:block"
+        />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 pb-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             {/* Left: text */}
             <div>
-              <div className="mb-6">
-                <img
-                  src="/favicon.svg"
-                  alt="Clawstore"
-                  className="w-20 h-20 sm:w-24 sm:h-24 drop-shadow-[0_0_24px_rgba(255,77,77,0.3)]"
-                />
-              </div>
               <h1 className="text-4xl sm:text-5xl font-black text-white mb-5 tracking-tight leading-[1.1]">
                 The app store for{" "}
                 <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
