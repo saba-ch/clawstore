@@ -19,6 +19,7 @@ export function createAuth(env: Bindings, baseURL: string) {
     trustedOrigins: [
       "https://useclawstore.com",
       "http://localhost:3000",
+      "http://localhost:8787",
     ],
     socialProviders: {
       github: {

@@ -8,6 +8,8 @@ const app = new Hono<AppEnv>();
 app.get("/device", (c) => {
   const userCode = c.req.query("user_code") ?? "";
   const baseUrl = new URL(c.req.url).origin;
+  const devicePageUrl = `${baseUrl}/device?user_code=${userCode}`;
+  const signInUrl = `${baseUrl}/api/auth/sign-in/social?provider=github&callbackURL=${encodeURIComponent(devicePageUrl)}`;
 
   return c.html(html`<!DOCTYPE html>
     <html lang="en">
@@ -23,15 +25,16 @@ app.get("/device", (c) => {
           p { color: #94a3b8; font-size: 0.875rem; margin-bottom: 1.5rem; }
           .code { font-family: monospace; font-size: 2rem; font-weight: bold; letter-spacing: 0.15em; color: #22d3ee; background: #0f172a; padding: 0.75rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; display: inline-block; }
           .btn { display: inline-block; padding: 0.625rem 1.5rem; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; border: none; transition: background 0.15s; }
+          .btn-login { background: #06b6d4; color: white; text-decoration: none; }
+          .btn-login:hover { background: #0891b2; }
           .btn-primary { background: #06b6d4; color: white; margin-right: 0.5rem; }
           .btn-primary:hover { background: #0891b2; }
           .btn-secondary { background: #334155; color: #94a3b8; }
           .btn-secondary:hover { background: #475569; }
-          .login-link { color: #06b6d4; text-decoration: none; }
-          .login-link:hover { text-decoration: underline; }
           #result { margin-top: 1rem; font-size: 0.875rem; }
           .success { color: #4ade80; }
           .error { color: #f87171; }
+          .hidden { display: none; }
         </style>
       </head>
       <body>
@@ -40,39 +43,61 @@ app.get("/device", (c) => {
           <p>The Clawstore CLI is requesting access to your account.</p>
           <div class="code">${userCode || "——"}</div>
           <p>Confirm this code matches what your terminal shows.</p>
-          <div id="actions">
+
+          <!-- Step 1: Sign in (shown if not authenticated) -->
+          <div id="login-section">
+            <p>Sign in to approve this device.</p>
+            <a href="${signInUrl}" class="btn btn-login">Sign in with GitHub</a>
+          </div>
+
+          <!-- Step 2: Approve/Deny (shown if authenticated) -->
+          <div id="approve-section" class="hidden">
             <button class="btn btn-primary" onclick="approve()">Approve</button>
             <button class="btn btn-secondary" onclick="deny()">Deny</button>
           </div>
+
           <div id="result"></div>
-          <div id="login-prompt" style="display: none; margin-top: 1rem;">
-            <p>You need to sign in first.</p>
-            <a href="${baseUrl}/api/auth/sign-in/social?provider=github&callbackURL=${encodeURIComponent(baseUrl + "/device?user_code=" + userCode)}" class="login-link">Sign in with GitHub</a>
-          </div>
         </div>
         <script>
           const userCode = "${userCode}";
           const baseUrl = "${baseUrl}";
+
+          // Check if user has a session
+          async function checkSession() {
+            try {
+              const res = await fetch(baseUrl + "/api/auth/get-session", {
+                credentials: "include",
+              });
+              if (res.ok) {
+                const data = await res.json();
+                if (data && data.user) {
+                  document.getElementById("login-section").classList.add("hidden");
+                  document.getElementById("approve-section").classList.remove("hidden");
+                  return;
+                }
+              }
+            } catch {}
+            // Not authenticated — show login
+            document.getElementById("login-section").classList.remove("hidden");
+            document.getElementById("approve-section").classList.add("hidden");
+          }
 
           async function approve() {
             const res = await fetch(baseUrl + "/api/auth/device/approve", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               credentials: "include",
-              body: JSON.stringify({ user_code: userCode }),
+              body: JSON.stringify({ userCode: userCode }),
             });
             const el = document.getElementById("result");
             if (res.ok) {
               el.className = "success";
-              el.textContent = "Approved! You can close this tab.";
-              document.getElementById("actions").style.display = "none";
-            } else if (res.status === 401) {
-              document.getElementById("actions").style.display = "none";
-              document.getElementById("login-prompt").style.display = "block";
+              el.textContent = "Approved! You can close this tab and return to your terminal.";
+              document.getElementById("approve-section").classList.add("hidden");
             } else {
               const body = await res.json().catch(() => ({}));
               el.className = "error";
-              el.textContent = body.message || "Something went wrong.";
+              el.textContent = body.message || "Something went wrong. Try signing in again.";
             }
           }
 
@@ -81,13 +106,15 @@ app.get("/device", (c) => {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               credentials: "include",
-              body: JSON.stringify({ user_code: userCode }),
+              body: JSON.stringify({ userCode: userCode }),
             });
             const el = document.getElementById("result");
             el.className = "error";
             el.textContent = "Denied. You can close this tab.";
-            document.getElementById("actions").style.display = "none";
+            document.getElementById("approve-section").classList.add("hidden");
           }
+
+          checkSession();
         </script>
       </body>
     </html>`);
