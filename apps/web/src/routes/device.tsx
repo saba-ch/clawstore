@@ -68,13 +68,13 @@ function DevicePage() {
   if (!user_code) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <div className="bg-slate-800 border border-slate-700 rounded-xl p-8 max-w-sm w-full text-center">
+        <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-8 max-w-sm w-full text-center">
           <h1 className="text-xl font-semibold text-white mb-2">
             No device code provided
           </h1>
           <p className="text-sm text-gray-400">
             Start the login flow from your terminal with{" "}
-            <code className="text-cyan-400">clawstore login</code>.
+            <code className="text-amber-400">clawstore login</code>.
           </p>
         </div>
       </div>
@@ -83,7 +83,7 @@ function DevicePage() {
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
-      <div className="bg-slate-800 border border-slate-700 rounded-xl p-8 max-w-sm w-full text-center">
+      <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-8 max-w-sm w-full text-center">
         <h1 className="text-xl font-semibold text-white mb-2">
           Authorize CLI
         </h1>
@@ -92,7 +92,7 @@ function DevicePage() {
         </p>
 
         {/* Device code */}
-        <div className="font-mono text-3xl font-bold tracking-widest text-cyan-400 bg-slate-900 rounded-lg py-3 px-6 mb-6 inline-block">
+        <div className="font-mono text-3xl font-bold tracking-widest text-amber-400 bg-neutral-900 rounded-lg py-3 px-6 mb-6 inline-block">
           {user_code}
         </div>
 
@@ -112,7 +112,7 @@ function DevicePage() {
           /* Not signed in */
           <button
             onClick={handleSignIn}
-            className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-lg transition-colors"
+            className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors"
           >
             Sign in with GitHub
           </button>
@@ -122,14 +122,14 @@ function DevicePage() {
             <button
               onClick={handleApprove}
               disabled={submitting}
-              className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Approve
             </button>
             <button
               onClick={handleDeny}
               disabled={submitting}
-              className="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-gray-300 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 bg-neutral-700 hover:bg-neutral-600 text-gray-300 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Deny
             </button>

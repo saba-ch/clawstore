@@ -7,6 +7,7 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'Clawstore',
+			customCss: ['./src/custom.css'],
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/saba-ch/clawstore' },
 			],

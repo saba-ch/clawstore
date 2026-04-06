@@ -1,0 +1,28 @@
+/* Clawstore docs theme — warm amber accent aligned with the main app */
+:root {
+  --sl-color-accent-low: #451a03;
+  --sl-color-accent: #d97706;
+  --sl-color-accent-high: #fef3c7;
+  --sl-color-white: #fafaf9;
+  --sl-color-gray-1: #e7e5e4;
+  --sl-color-gray-2: #a8a29e;
+  --sl-color-gray-3: #78716c;
+  --sl-color-gray-4: #44403c;
+  --sl-color-gray-5: #292524;
+  --sl-color-gray-6: #1c1917;
+  --sl-color-black: #0a0a0a;
+}
+
+:root[data-theme="light"] {
+  --sl-color-accent-low: #fef3c7;
+  --sl-color-accent: #d97706;
+  --sl-color-accent-high: #451a03;
+  --sl-color-white: #0a0a0a;
+  --sl-color-gray-1: #292524;
+  --sl-color-gray-2: #44403c;
+  --sl-color-gray-3: #78716c;
+  --sl-color-gray-4: #a8a29e;
+  --sl-color-gray-5: #e7e5e4;
+  --sl-color-gray-6: #fafaf9;
+  --sl-color-black: #fafaf9;
+}

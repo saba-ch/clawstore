@@ -30,7 +30,7 @@ export function UserMenu() {
       <Button
         variant="outline"
         size="sm"
-        className="border-slate-700 text-gray-300 hover:text-white hover:bg-slate-800"
+        className="border-neutral-700 text-gray-300 hover:text-white hover:bg-neutral-800"
         onClick={() =>
           authClient.signIn.social({
             provider: "github",
@@ -54,10 +54,10 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-cyan-500">
+        <button className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-amber-500">
           <Avatar className="h-8 w-8">
             <AvatarImage src={user.image ?? undefined} alt={user.name} />
-            <AvatarFallback className="bg-slate-700 text-xs text-gray-300">
+            <AvatarFallback className="bg-neutral-700 text-xs text-gray-300">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -65,13 +65,13 @@ export function UserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-48 bg-slate-800 border-slate-700"
+        className="w-52 bg-neutral-900 border-neutral-800"
       >
-        <div className="px-2 py-1.5">
+        <div className="px-3 py-2">
           <p className="text-sm font-medium text-white">{user.name}</p>
-          <p className="text-xs text-gray-400">{user.email}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{user.email}</p>
         </div>
-        <DropdownMenuSeparator className="bg-slate-700" />
+        <DropdownMenuSeparator className="bg-neutral-800" />
         <DropdownMenuItem asChild>
           <Link
             to="/profile"
@@ -81,7 +81,7 @@ export function UserMenu() {
             Profile
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-slate-700" />
+        <DropdownMenuSeparator className="bg-neutral-800" />
         <DropdownMenuItem
           className="flex items-center gap-2 text-gray-300 cursor-pointer"
           onClick={async () => {
