@@ -72,6 +72,16 @@ function BrowsePage() {
 
   const activeSort =
     sortOptions.find((s) => s.key === filters.sort) ?? sortOptions[0]
+  const activeCategory = categories.find(
+    (c: Category) => c.id === filters.category
+  )
+  const pageTitle = activeCategory
+    ? activeCategory.name
+    : filters.category
+      ? filters.category.charAt(0).toUpperCase() + filters.category.slice(1)
+      : filters.tag
+        ? `Tagged "${filters.tag}"`
+        : "Agents"
 
   useEffect(() => {
     if (searchInput === (filters.q ?? "")) return
@@ -89,14 +99,20 @@ function BrowsePage() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">
-          Agents{" "}
+          {pageTitle}{" "}
           <span className="text-gray-500 font-normal text-lg">
             ({agents.length})
           </span>
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Browse the agent registry.
-        </p>
+        {(filters.category || filters.tag) && (
+          <Link
+            to="/browse"
+            search={{}}
+            className="text-sm text-amber-400 hover:text-amber-300 transition-colors mt-1 inline-block"
+          >
+            Clear filter
+          </Link>
+        )}
       </div>
 
       {/* Search bar */}
