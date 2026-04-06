@@ -1,55 +1,44 @@
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanStackDevtools } from '@tanstack/react-devtools'
-
-import Header from '../components/Header'
+import { HeadContent, Outlet, Scripts, createRootRoute, Link } from '@tanstack/react-router'
+import { Search } from 'lucide-react'
 
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
   head: () => ({
     meta: [
-      {
-        charSet: 'utf-8',
-      },
-      {
-        name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
-      },
-      {
-        title: 'TanStack Start Starter',
-      },
+      { charSet: 'utf-8' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { title: 'Clawstore — Agent Store for OpenClaw' },
     ],
     links: [
-      {
-        rel: 'stylesheet',
-        href: appCss,
-      },
+      { rel: 'stylesheet', href: appCss },
     ],
   }),
-  shellComponent: RootDocument,
+  component: RootComponent,
 })
 
-function RootDocument({ children }: { children: React.ReactNode }) {
+function RootComponent() {
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
-      <body>
-        <Header />
-        {children}
-        <TanStackDevtools
-          config={{
-            position: 'bottom-right',
-          }}
-          plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
+      <body className="bg-slate-950 text-gray-100 min-h-screen">
+        <nav className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-sm sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-6">
+            <Link to="/" className="text-lg font-bold tracking-tight text-white hover:text-cyan-400 transition-colors">
+              clawstore
+            </Link>
+            <Link to="/browse" className="text-sm text-gray-400 hover:text-white transition-colors">
+              Browse
+            </Link>
+            <div className="flex-1" />
+            <Link to="/search" className="text-gray-400 hover:text-white transition-colors">
+              <Search className="w-4 h-4" />
+            </Link>
+          </div>
+        </nav>
+        <Outlet />
         <Scripts />
       </body>
     </html>

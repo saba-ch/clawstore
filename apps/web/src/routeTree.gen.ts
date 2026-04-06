@@ -9,38 +9,103 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UsersUsernameRouteImport } from './routes/users.$username'
+import { Route as AgentsScopeNameRouteImport } from './routes/agents.$scope.$name'
 
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrowseRoute = BrowseRouteImport.update({
+  id: '/browse',
+  path: '/browse',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UsersUsernameRoute = UsersUsernameRouteImport.update({
+  id: '/users/$username',
+  path: '/users/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgentsScopeNameRoute = AgentsScopeNameRouteImport.update({
+  id: '/agents/$scope/$name',
+  path: '/agents/$scope/$name',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/browse': typeof BrowseRoute
+  '/search': typeof SearchRoute
+  '/users/$username': typeof UsersUsernameRoute
+  '/agents/$scope/$name': typeof AgentsScopeNameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/browse': typeof BrowseRoute
+  '/search': typeof SearchRoute
+  '/users/$username': typeof UsersUsernameRoute
+  '/agents/$scope/$name': typeof AgentsScopeNameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/browse': typeof BrowseRoute
+  '/search': typeof SearchRoute
+  '/users/$username': typeof UsersUsernameRoute
+  '/agents/$scope/$name': typeof AgentsScopeNameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/browse'
+    | '/search'
+    | '/users/$username'
+    | '/agents/$scope/$name'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/browse' | '/search' | '/users/$username' | '/agents/$scope/$name'
+  id:
+    | '__root__'
+    | '/'
+    | '/browse'
+    | '/search'
+    | '/users/$username'
+    | '/agents/$scope/$name'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BrowseRoute: typeof BrowseRoute
+  SearchRoute: typeof SearchRoute
+  UsersUsernameRoute: typeof UsersUsernameRoute
+  AgentsScopeNameRoute: typeof AgentsScopeNameRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/browse': {
+      id: '/browse'
+      path: '/browse'
+      fullPath: '/browse'
+      preLoaderRoute: typeof BrowseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +113,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/users/$username': {
+      id: '/users/$username'
+      path: '/users/$username'
+      fullPath: '/users/$username'
+      preLoaderRoute: typeof UsersUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agents/$scope/$name': {
+      id: '/agents/$scope/$name'
+      path: '/agents/$scope/$name'
+      fullPath: '/agents/$scope/$name'
+      preLoaderRoute: typeof AgentsScopeNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BrowseRoute: BrowseRoute,
+  SearchRoute: SearchRoute,
+  UsersUsernameRoute: UsersUsernameRoute,
+  AgentsScopeNameRoute: AgentsScopeNameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
