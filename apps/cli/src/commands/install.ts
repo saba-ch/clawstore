@@ -1,13 +1,17 @@
 import { Command } from "commander";
 import { resolve, join } from "node:path";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import * as tar from "tar";
 import { getClient } from "../lib/client.js";
 import { getConfigDir } from "../lib/config.js";
+
+const execFileAsync = promisify(execFile);
 
 export const installCommand = new Command("install")
   .description("Install an agent from the registry")
@@ -95,7 +99,26 @@ export const installCommand = new Command("install")
       );
 
       console.log(`\nInstalled to ${workspaceDir}`);
-      console.log(`Run your agent with: openclaw agents add ${name} --workspace ${workspaceDir}`);
+
+      // Auto-register with openclaw
+      try {
+        // Read model from agent.json
+        let model: string | undefined;
+        try {
+          const agentJson = JSON.parse(await readFile(join(workspaceDir, "agent.json"), "utf-8"));
+          model = agentJson.agent?.defaults?.model;
+        } catch {
+          // No agent.json or no model — skip
+        }
+
+        const args = ["agents", "add", name, "--workspace", workspaceDir, "--non-interactive"];
+        if (model) args.push("--model", model);
+
+        await execFileAsync("openclaw", args);
+        console.log(`Registered agent "${name}" with openclaw.`);
+      } catch {
+        console.log(`Tip: run \`openclaw agents add ${name} --workspace ${workspaceDir}\` to register manually.`);
+      }
     } catch (err: any) {
       const code = err.code ? `[${err.code}] ` : "";
       console.error(`Install failed: ${code}${err.message}`);

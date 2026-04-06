@@ -1,8 +1,9 @@
 import { Command } from "commander";
 import * as p from "@clack/prompts";
-import { writeFile, readdir } from "node:fs/promises";
-import { resolve, join } from "node:path";
+import { writeFile, readdir, mkdir } from "node:fs/promises";
+import { resolve, join, dirname } from "node:path";
 import { SCHEMA_VERSION } from "@clawstore/schema";
+import { getTemplateFiles } from "@clawstore/template";
 import { getClient } from "../lib/client.js";
 
 const CANONICAL_ENTRYPOINTS = [
@@ -73,6 +74,18 @@ export const initCommand = new Command("init")
       model: string;
     };
 
+    // Try to detect scope/author from logged-in user
+    let detectedScope: string | null = null;
+    let detectedAuthor: string | null = null;
+    try {
+      const client = await getClient();
+      const me = await client.getMe();
+      detectedScope = me.scope ?? null;
+      detectedAuthor = me.name ?? null;
+    } catch {
+      // Not logged in or API error — skip
+    }
+
     if (hasAllFlags) {
       // Validate inputs
       if (!/^@[a-z0-9-]+\/[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(opts.id)) {
@@ -90,25 +103,13 @@ export const initCommand = new Command("init")
         tagline: opts.tagline,
         description: opts.description || opts.tagline,
         category: opts.category,
-        author: opts.author || "",
+        author: opts.author || detectedAuthor || "",
         license: opts.license,
         model: opts.model,
       };
     } else {
       // Interactive mode
       p.intro("clawstore init");
-
-      // Try to detect scope from logged-in user
-      let detectedScope: string | null = null;
-      let detectedAuthor: string | null = null;
-      try {
-        const client = await getClient();
-        const me = await client.getMe();
-        detectedScope = me.scope ?? null;
-        detectedAuthor = me.name ?? null;
-      } catch {
-        // Not logged in or API error — skip
-      }
 
       if (detected.length > 0) {
         p.note(detected.join(", "), "Detected workspace files");
@@ -222,6 +223,18 @@ export const initCommand = new Command("init")
 
     const outPath = join(dir, "agent.json");
     await writeFile(outPath, JSON.stringify(manifest, null, 2) + "\n");
+
+    // Scaffold template files
+    const templateFiles = getTemplateFiles({
+      name: answers.name,
+      tagline: answers.tagline,
+    });
+
+    for (const file of templateFiles) {
+      const filePath = join(dir, file.path);
+      await mkdir(dirname(filePath), { recursive: true });
+      await writeFile(filePath, file.content);
+    }
 
     if (hasAllFlags) {
       console.log(`Created ${outPath}`);

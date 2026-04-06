@@ -44,6 +44,7 @@
   "devDependencies": {
     "@clawstore/schema": "workspace:*",
     "@clawstore/sdk": "workspace:*",
+    "@clawstore/template": "workspace:*",
     "@clawstore/validator": "workspace:*",
     "@types/glob": "^9.0.0",
     "@types/node": "^22.0.0",
