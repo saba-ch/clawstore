@@ -34,5 +34,5 @@ jobs:
       # Uses npm trusted publishing (OIDC) — no token needed
       # NODE_AUTH_TOKEN must NOT be set, otherwise npm uses it instead of OIDC
       - name: Publish to npm
-        run: npm publish --access public --provenance
+        run: npm publish --access public
         working-directory: apps/cli
