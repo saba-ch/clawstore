@@ -1,7 +1,12 @@
+import Ajv from "ajv";
+import addFormats from "ajv-formats";
+import { agentJsonSchema } from "./agent-schema.js";
+
+export { agentJsonSchema } from "./agent-schema.js";
+
 export const SCHEMA_VERSION = 1;
 
 // Agent manifest TypeScript types.
-// Full JSON Schema implementation in Phase 4.
 
 export interface AgentManifest {
   schemaVersion: number;
@@ -53,4 +58,34 @@ export interface AgentManifest {
     entrypoints: Record<string, string>;
     templates?: Record<string, string>;
   };
+}
+
+// Compiled Ajv validator for agent.json schema validation.
+
+const ajv = new Ajv({ allErrors: true });
+addFormats(ajv);
+
+const compiledValidate = ajv.compile<AgentManifest>(agentJsonSchema);
+
+export interface SchemaError {
+  path: string;
+  message: string;
+}
+
+/** Validate a parsed agent.json object against the JSON Schema. */
+export function validateManifestSchema(data: unknown): {
+  valid: boolean;
+  errors: SchemaError[];
+} {
+  const valid = compiledValidate(data);
+  if (valid) {
+    return { valid: true, errors: [] };
+  }
+
+  const errors: SchemaError[] = (compiledValidate.errors ?? []).map((e) => ({
+    path: e.instancePath || "/",
+    message: e.message ?? "Unknown validation error",
+  }));
+
+  return { valid: false, errors };
 }
