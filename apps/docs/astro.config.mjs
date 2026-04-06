@@ -6,7 +6,7 @@ export default defineConfig({
 	site: 'https://docs.useclawstore.com',
 	integrations: [
 		starlight({
-			title: 'Clawstore',
+			title: 'ClawStore',
 			logo: {
 				src: './public/favicon.svg',
 				replacesTitle: false,

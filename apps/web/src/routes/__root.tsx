@@ -17,7 +17,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Clawstore — Agent Store for OpenClaw" },
+      { title: "ClawStore — Agent Store for OpenClaw" },
       {
         name: "description",
         content:
@@ -48,7 +48,7 @@ function RootComponent() {
             >
               <Package className="w-5 h-5" />
               <span className="text-base font-bold tracking-tight hidden sm:inline">
-                clawstore
+                ClawStore
               </span>
             </Link>
 

@@ -108,7 +108,7 @@ export function Footer() {
         </div>
         <div className="mt-10 pt-6 border-t border-neutral-800/60 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-600">
-            &copy; {new Date().getFullYear()} Clawstore. Open source under MIT.
+            &copy; {new Date().getFullYear()} ClawStore. Open source under MIT.
           </p>
           <p className="text-xs text-gray-600 flex items-center gap-1">
             Built with{" "}

@@ -88,7 +88,7 @@ function DevicePage() {
           Authorize CLI
         </h1>
         <p className="text-sm text-gray-400 mb-6">
-          The Clawstore CLI is requesting access to your account.
+          The ClawStore CLI is requesting access to your account.
         </p>
 
         {/* Device code */}
