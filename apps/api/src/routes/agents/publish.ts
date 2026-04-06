@@ -137,7 +137,15 @@ app.post("/publish", async (c) => {
     sha256: tarballSha256,
   });
 
-  // Upload store assets (icon, screenshots) from separate form parts
+  // Upload store assets to R2 and collect metadata (DB insert happens after version row)
+  const pendingAssets: Array<{
+    kind: string;
+    r2Key: string;
+    contentType: string;
+    sizeBytes: number;
+    sha256: string;
+  }> = [];
+
   for (const [key, value] of formData.entries()) {
     if (key === "metadata" || key === "tarball") continue;
     if (typeof value === "string") continue;
@@ -158,26 +166,22 @@ app.post("/publish", async (c) => {
       },
     });
 
-    await db.insert(versionAssets).values({
-      id: crypto.randomUUID(),
-      versionId,
+    pendingAssets.push({
       kind,
       r2Key: assetR2Key,
       contentType: file.type || "application/octet-stream",
       sizeBytes: assetBytes.byteLength,
       sha256: assetHash,
-      ordering: kind === "icon" ? 0 : 1,
     });
   }
 
-  // Persist agent + version
+  // Persist agent (without latestVersionId — version row doesn't exist yet)
   if (!existing) {
     await db.insert(agents).values({
       id: agentId,
       scope,
       name,
       ownerUserId: user.id,
-      latestVersionId: isPrerelease ? null : versionId,
       category: manifest.category,
       description: manifest.description,
       tagline: manifest.tagline,
@@ -186,23 +190,9 @@ app.post("/publish", async (c) => {
       repository: manifest.repository ?? null,
       license: manifest.license,
     });
-  } else {
-    await db
-      .update(agents)
-      .set({
-        ...(!isPrerelease ? { latestVersionId: versionId } : {}),
-        category: manifest.category,
-        description: manifest.description,
-        tagline: manifest.tagline,
-        displayName: manifest.name,
-        homepage: manifest.homepage ?? null,
-        repository: manifest.repository ?? null,
-        license: manifest.license,
-        updatedAt: new Date(),
-      })
-      .where(eq(agents.id, existing.id));
   }
 
+  // Insert version row
   await db.insert(versions).values({
     id: versionId,
     agentId,
@@ -214,6 +204,37 @@ app.post("/publish", async (c) => {
     tarballSizeBytes: tarballSize,
     uploadedByUserId: user.id,
   });
+
+  // Now update agent metadata + latestVersionId (version row exists)
+  await db
+    .update(agents)
+    .set({
+      ...(!isPrerelease ? { latestVersionId: versionId } : {}),
+      category: manifest.category,
+      description: manifest.description,
+      tagline: manifest.tagline,
+      displayName: manifest.name,
+      homepage: manifest.homepage ?? null,
+      repository: manifest.repository ?? null,
+      license: manifest.license,
+      updatedAt: new Date(),
+    })
+    .where(eq(agents.id, agentId));
+
+  // Insert asset metadata (version row exists now)
+  for (let i = 0; i < pendingAssets.length; i++) {
+    const asset = pendingAssets[i];
+    await db.insert(versionAssets).values({
+      id: crypto.randomUUID(),
+      versionId,
+      kind: asset.kind,
+      r2Key: asset.r2Key,
+      contentType: asset.contentType,
+      sizeBytes: asset.sizeBytes,
+      sha256: asset.sha256,
+      ordering: asset.kind === "icon" ? 0 : i + 1,
+    });
+  }
 
   // Update tags
   await db.delete(agentTags).where(eq(agentTags.agentId, agentId));

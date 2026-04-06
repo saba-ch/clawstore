@@ -52,38 +52,54 @@ export function createAuth(env: Bindings, baseURL: string) {
       account: {
         create: {
           after: async (account) => {
+            console.log("[profile-hook] account create fired, providerId:", account.providerId);
             if (account.providerId !== "github") return;
             if (!account.accessToken) return;
 
-            // Check if profile already exists
-            const [existing] = await appDb
-              .select()
-              .from(profiles)
-              .where(eq(profiles.userId, account.userId))
-              .limit(1);
-            if (existing) return;
+            try {
+              // Check if profile already exists
+              const [existing] = await appDb
+                .select()
+                .from(profiles)
+                .where(eq(profiles.userId, account.userId))
+                .limit(1);
+              if (existing) {
+                console.log("[profile-hook] profile already exists");
+                return;
+              }
 
-            // Fetch the GitHub username from the API using the access token
-            const ghRes = await fetch("https://api.github.com/user", {
-              headers: {
-                Authorization: `Bearer ${account.accessToken}`,
-                Accept: "application/vnd.github+json",
-              },
-            });
-            if (!ghRes.ok) return;
+              // Fetch the GitHub username from the API using the access token
+              console.log("[profile-hook] fetching github user...");
+              const ghRes = await fetch("https://api.github.com/user", {
+                headers: {
+                  Authorization: `Bearer ${account.accessToken}`,
+                  Accept: "application/vnd.github+json",
+                  "User-Agent": "clawstore-api",
+                },
+              });
 
-            const gh = (await ghRes.json()) as {
-              login: string;
-              avatar_url: string;
-              name: string | null;
-            };
+              if (!ghRes.ok) {
+                console.error("[profile-hook] GitHub API error:", ghRes.status, await ghRes.text());
+                return;
+              }
 
-            await appDb.insert(profiles).values({
-              userId: account.userId,
-              githubLogin: gh.login.toLowerCase(),
-              avatarUrl: gh.avatar_url,
-              displayName: gh.name,
-            });
+              const gh = (await ghRes.json()) as {
+                login: string;
+                avatar_url: string;
+                name: string | null;
+              };
+              console.log("[profile-hook] got github login:", gh.login);
+
+              await appDb.insert(profiles).values({
+                userId: account.userId,
+                githubLogin: gh.login.toLowerCase(),
+                avatarUrl: gh.avatar_url,
+                displayName: gh.name,
+              });
+              console.log("[profile-hook] profile created for", gh.login);
+            } catch (err) {
+              console.error("[profile-hook] error:", err);
+            }
           },
         },
       },
