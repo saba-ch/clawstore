@@ -1,18 +1,23 @@
-/* Clawstore docs theme — warm amber accent aligned with the main app */
+/* Clawstore docs theme — matches the main app's dark aesthetic */
+
+/* Dark mode (default) */
 :root {
   --sl-color-accent-low: #451a03;
-  --sl-color-accent: #d97706;
+  --sl-color-accent: #f59e0b;
   --sl-color-accent-high: #fef3c7;
-  --sl-color-white: #fafaf9;
-  --sl-color-gray-1: #e7e5e4;
+  --sl-color-white: #f5f5f4;
+  --sl-color-gray-1: #d6d3d1;
   --sl-color-gray-2: #a8a29e;
   --sl-color-gray-3: #78716c;
-  --sl-color-gray-4: #44403c;
-  --sl-color-gray-5: #292524;
-  --sl-color-gray-6: #1c1917;
+  --sl-color-gray-4: #3a3a3a;
+  --sl-color-gray-5: #1a1a1a;
+  --sl-color-gray-6: #111111;
   --sl-color-black: #0a0a0a;
+
+  --sl-font: "Geist", ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Light mode */
 :root[data-theme="light"] {
   --sl-color-accent-low: #fef3c7;
   --sl-color-accent: #d97706;
@@ -25,4 +30,34 @@
   --sl-color-gray-5: #e7e5e4;
   --sl-color-gray-6: #fafaf9;
   --sl-color-black: #fafaf9;
+}
+
+/* Site title styling */
+.site-title {
+  font-weight: 700 !important;
+}
+
+/* Code blocks — match the main app's neutral-950 look */
+:root {
+  --sl-color-bg-code: #0a0a0a;
+}
+
+/* Sidebar active item accent */
+nav.sidebar a[aria-current="page"] {
+  color: var(--sl-color-accent) !important;
+  font-weight: 600;
+}
+
+/* Links — amber accent */
+main a {
+  color: var(--sl-color-accent);
+}
+
+main a:hover {
+  color: #fbbf24;
+}
+
+/* Softer borders */
+.content-panel {
+  border-color: #262626 !important;
 }
