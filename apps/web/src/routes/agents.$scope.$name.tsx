@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
 import { api } from "../lib/api"
 import { formatCount } from "../lib/utils"
+import type { AgentVersion } from "@clawstore/sdk"
 import {
   Download,
   Star,
@@ -13,12 +14,17 @@ import {
   Globe,
   Scale,
   Package,
+  Clock,
+  FileDown,
 } from "lucide-react"
 
 export const Route = createFileRoute("/agents/$scope/$name")({
   loader: async ({ params }) => {
-    const agent = await api.getAgent(params.scope, params.name)
-    return { agent }
+    const [agent, versionsRes] = await Promise.all([
+      api.getAgent(params.scope, params.name),
+      api.listVersions(params.scope, params.name, { limit: 20 }),
+    ])
+    return { agent, versions: versionsRes.items }
   },
   component: AgentDetailPage,
   errorComponent: ({ error }) => (
@@ -59,9 +65,18 @@ function isGitHubUrl(url: string): boolean {
   return url.includes("github.com")
 }
 
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  })
+}
+
 function AgentDetailPage() {
-  const { agent } = Route.useLoaderData()
+  const { agent, versions } = Route.useLoaderData()
   const installCmd = `clawstore install @${agent.scope}/${agent.name}`
+  const apiBase = import.meta.env.VITE_API_URL ?? "https://api.useclawstore.com/v1"
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
@@ -149,25 +164,65 @@ function AgentDetailPage() {
             </div>
           </section>
 
-          {/* Latest version */}
-          {agent.latestVersion && (
+          {/* Version history */}
+          {versions.length > 0 && (
             <section>
-              <h2 className="text-base font-semibold text-white mb-3">
-                Latest version
+              <h2 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-gray-500" />
+                Versions
               </h2>
-              <div className="bg-neutral-900/50 border border-neutral-800/60 rounded-xl p-5">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <span className="text-white font-mono text-sm">
-                    {agent.latestVersion.version}
-                  </span>
-                  <span className="px-2 py-0.5 bg-neutral-800 border border-neutral-700/50 rounded-md text-[11px] text-gray-400">
-                    {agent.latestVersion.channel}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-500">
-                  {(agent.latestVersion.tarballSizeBytes / 1024).toFixed(1)} KB
-                  tarball
-                </div>
+              <div className="space-y-2">
+                {versions.map((v: AgentVersion, i: number) => (
+                  <div
+                    key={v.id}
+                    className={`bg-neutral-900/50 border rounded-xl p-4 ${
+                      i === 0
+                        ? "border-amber-500/30"
+                        : "border-neutral-800/60"
+                    } ${v.yankedAt ? "opacity-50" : ""}`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-white font-mono text-sm">
+                          {v.version}
+                        </span>
+                        <span className="px-2 py-0.5 bg-neutral-800 border border-neutral-700/50 rounded-md text-[11px] text-gray-400">
+                          {v.channel}
+                        </span>
+                        {i === 0 && (
+                          <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-md text-[11px] text-amber-400">
+                            latest
+                          </span>
+                        )}
+                        {v.yankedAt && (
+                          <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded-md text-[11px] text-red-400">
+                            yanked
+                          </span>
+                        )}
+                      </div>
+                      {!v.yankedAt && (
+                        <a
+                          href={`${apiBase}/agents/${agent.scope}/${agent.name}/versions/${v.version}/tarball`}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 rounded-lg text-xs text-gray-300 hover:text-white transition-colors shrink-0"
+                          download
+                        >
+                          <FileDown className="w-3 h-3" />
+                          .tgz
+                        </a>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                      <span>{formatDate(v.uploadedAt)}</span>
+                      <span>
+                        {(v.tarballSizeBytes / 1024).toFixed(1)} KB
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Download className="w-3 h-3" />
+                        {formatCount(v.downloadCount)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </section>
           )}
