@@ -52,11 +52,8 @@ export function createAuth(env: Bindings, baseURL: string) {
       account: {
         create: {
           after: async (account) => {
-            // When a GitHub account is linked, create the profile if it doesn't exist
             if (account.providerId !== "github") return;
-
-            const githubLogin = (account.accountId ?? "").toLowerCase();
-            if (!githubLogin) return;
+            if (!account.accessToken) return;
 
             // Check if profile already exists
             const [existing] = await appDb
@@ -64,15 +61,28 @@ export function createAuth(env: Bindings, baseURL: string) {
               .from(profiles)
               .where(eq(profiles.userId, account.userId))
               .limit(1);
-
             if (existing) return;
 
-            // Create profile from the account data
+            // Fetch the GitHub username from the API using the access token
+            const ghRes = await fetch("https://api.github.com/user", {
+              headers: {
+                Authorization: `Bearer ${account.accessToken}`,
+                Accept: "application/vnd.github+json",
+              },
+            });
+            if (!ghRes.ok) return;
+
+            const gh = (await ghRes.json()) as {
+              login: string;
+              avatar_url: string;
+              name: string | null;
+            };
+
             await appDb.insert(profiles).values({
               userId: account.userId,
-              githubLogin,
-              avatarUrl: null,
-              displayName: null,
+              githubLogin: gh.login.toLowerCase(),
+              avatarUrl: gh.avatar_url,
+              displayName: gh.name,
             });
           },
         },
