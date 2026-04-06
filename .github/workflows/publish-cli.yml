@@ -25,9 +25,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # npm >=9.5 required for OIDC provenance
-      - run: npm install -g npm@latest
-
       - name: Build all packages
         run: pnpm build
 
