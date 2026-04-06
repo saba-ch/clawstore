@@ -20,6 +20,12 @@ importers:
 
   apps/api:
     dependencies:
+      '@clawstore/schema':
+        specifier: workspace:*
+        version: link:../../packages/schema
+      '@clawstore/validator':
+        specifier: workspace:*
+        version: link:../../packages/validator
       '@hono/zod-validator':
         specifier: ^0.7.6
         version: 0.7.6(hono@4.12.11)(zod@4.3.6)
@@ -32,6 +38,9 @@ importers:
       hono:
         specifier: ^4.12.11
         version: 4.12.11
+      semver:
+        specifier: ^7.7.4
+        version: 7.7.4
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -39,6 +48,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20250410.0
         version: 4.20260405.1
+      '@types/semver':
+        specifier: ^7.7.1
+        version: 7.7.1
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10
@@ -1844,6 +1856,9 @@ packages:
 
   '@types/react@19.2.14':
     resolution: {integrity: sha512-ilcTH/UniCkMdtexkoCN0bI7pMcJDvmQFPvuPvmEaYA/NSfFTAgdUSLAoVjaRJm7+6PvcM+q1zYOwS4wTYMF9w==}
+
+  '@types/semver@7.7.1':
+    resolution: {integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==}
 
   '@vitejs/plugin-react@5.2.0':
     resolution: {integrity: sha512-YmKkfhOAi3wsB1PhJq5Scj3GXMn3WvtQ/JC0xoopuHoXSdmtdStOpFrYaT1kie2YgFBcIe64ROzMYRjCrYOdYw==}
@@ -4634,6 +4649,8 @@ snapshots:
   '@types/react@19.2.14':
     dependencies:
       csstype: 3.2.3
+
+  '@types/semver@7.7.1': {}
 
   '@vitejs/plugin-react@5.2.0(vite@7.3.1(@types/node@22.19.17)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0))':
     dependencies:

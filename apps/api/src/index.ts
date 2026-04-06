@@ -8,6 +8,14 @@ import healthRoutes from "./routes/health";
 import categoryRoutes from "./routes/categories";
 import meRoutes from "./routes/me";
 import userRoutes from "./routes/users";
+import packageRoutes from "./routes/packages";
+import publishRoutes from "./routes/publish";
+import yankRoutes from "./routes/yank";
+import downloadRoutes from "./routes/download";
+import reviewRoutes from "./routes/reviews";
+import reportRoutes from "./routes/reports";
+import updateRoutes from "./routes/updates";
+import tokenRoutes from "./routes/tokens";
 import type { AppEnv } from "./types";
 
 const app = new Hono<AppEnv>();
@@ -45,5 +53,13 @@ app.route("/v1", healthRoutes);
 app.route("/v1", categoryRoutes);
 app.route("/v1", meRoutes);
 app.route("/v1", userRoutes);
+app.route("/v1", packageRoutes);
+app.route("/v1", publishRoutes);
+app.route("/v1", yankRoutes);
+app.route("/v1", downloadRoutes);
+app.route("/v1", reviewRoutes);
+app.route("/v1", reportRoutes);
+app.route("/v1", updateRoutes);
+app.route("/v1", tokenRoutes);
 
 export default app;

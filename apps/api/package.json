@@ -12,14 +12,18 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@clawstore/schema": "workspace:*",
+    "@clawstore/validator": "workspace:*",
     "@hono/zod-validator": "^0.7.6",
     "better-auth": "^1.5.6",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.12.11",
+    "semver": "^7.7.4",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250410.0",
+    "@types/semver": "^7.7.1",
     "drizzle-kit": "^0.31.10",
     "typescript": "^5.8.0",
     "wrangler": "^4.4.0"
