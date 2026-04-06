@@ -27,10 +27,8 @@ export function UserMenu() {
 
   if (!session?.user) {
     return (
-      <Button
-        variant="outline"
-        size="sm"
-        className="border-neutral-700 text-gray-300 hover:text-white hover:bg-neutral-800"
+      <button
+        className="inline-flex items-center h-7 px-2.5 text-[0.8rem] font-medium rounded-lg border border-neutral-700 bg-transparent text-gray-300 hover:text-white hover:bg-neutral-800 transition-colors"
         onClick={() =>
           authClient.signIn.social({
             provider: "github",
@@ -39,7 +37,7 @@ export function UserMenu() {
         }
       >
         Sign in
-      </Button>
+      </button>
     );
   }
 
