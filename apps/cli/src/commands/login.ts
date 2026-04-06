@@ -8,42 +8,43 @@ export const loginCommand = new Command("login")
     p.intro("clawstore login");
 
     const apiUrl = await getApiUrl();
-    // Use Better Auth's device authorization flow
     const baseUrl = apiUrl.replace(/\/v1$/, "");
 
-    // Step 1: Request a device code
-    const codeRes = await fetch(`${baseUrl}/api/auth/device-authorization/authorize`, {
+    // Step 1: Request a device code via Better Auth's device authorization plugin
+    const codeRes = await fetch(`${baseUrl}/api/auth/device/code`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clientId: "clawstore-cli" }),
+      body: JSON.stringify({ client_id: "clawstore-cli" }),
     });
 
     if (!codeRes.ok) {
-      p.cancel("Failed to start device authorization flow.");
+      const body = await codeRes.text();
+      p.log.error(`Failed to start device authorization (${codeRes.status}): ${body}`);
+      p.cancel("Try again or check your API URL.");
       process.exit(1);
     }
 
-    const codeData = await codeRes.json() as {
-      deviceCode: string;
-      userCode: string;
-      verificationUri: string;
-      verificationUriComplete: string;
-      expiresIn: number;
+    const codeData = (await codeRes.json()) as {
+      device_code: string;
+      user_code: string;
+      verification_uri: string;
+      verification_uri_complete: string;
+      expires_in: number;
       interval: number;
     };
 
     p.note(
-      `Code: ${codeData.userCode}\nURL: ${codeData.verificationUriComplete}`,
+      `Code: ${codeData.user_code}\nURL: ${codeData.verification_uri_complete}`,
       "Open this URL in your browser"
     );
 
     // Try to open the browser
     try {
       const open = (await import("open")).default;
-      await open(codeData.verificationUriComplete);
-      console.log("  Browser opened automatically.\n");
+      await open(codeData.verification_uri_complete);
+      p.log.info("Browser opened automatically.");
     } catch {
-      console.log("  Open the URL above manually.\n");
+      p.log.info("Open the URL above manually.");
     }
 
     // Step 2: Poll for token
@@ -51,31 +52,45 @@ export const loginCommand = new Command("login")
     spinner.start("Waiting for authorization...");
 
     const interval = (codeData.interval || 5) * 1000;
-    const deadline = Date.now() + codeData.expiresIn * 1000;
+    const deadline = Date.now() + (codeData.expires_in || 300) * 1000;
 
     while (Date.now() < deadline) {
       await new Promise((r) => setTimeout(r, interval));
 
-      const tokenRes = await fetch(`${baseUrl}/api/auth/device-authorization/verify`, {
+      const tokenRes = await fetch(`${baseUrl}/api/auth/device/token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceCode: codeData.deviceCode }),
+        body: JSON.stringify({
+          grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+          device_code: codeData.device_code,
+          client_id: "clawstore-cli",
+        }),
       });
 
       if (tokenRes.ok) {
-        const tokenData = await tokenRes.json() as { token: string };
-        if (tokenData.token) {
-          await writeToken(tokenData.token);
+        const tokenData = (await tokenRes.json()) as {
+          access_token?: string;
+        };
+        if (tokenData.access_token) {
+          await writeToken(tokenData.access_token);
           spinner.stop("Logged in successfully.");
           p.outro("Token saved to ~/.clawstore/auth.json");
           return;
         }
       }
 
-      const body = await tokenRes.json().catch(() => null) as { error?: string } | null;
+      const body = (await tokenRes.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+
       if (body?.error === "expired_token") {
         spinner.stop("Device code expired.");
         p.cancel("Try again with `clawstore login`.");
+        process.exit(1);
+      }
+      if (body?.error === "access_denied") {
+        spinner.stop("Access denied.");
+        p.cancel("Authorization was denied.");
         process.exit(1);
       }
       // authorization_pending — keep polling

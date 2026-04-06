@@ -1,6 +1,6 @@
 # Backend API
 
-The Clawstore backend is a single Hono app deployed as a Cloudflare Worker at `api.clawstore.dev`. It owns all read and write paths for the registry: authentication, publishing, search, agent metadata, tarball serving, yank, reports. The CLI and the web frontend both consume it — the web Worker through a Cloudflare service binding, the CLI over public HTTPS.
+The Clawstore backend is a single Hono app deployed as a Cloudflare Worker at `api.useclawstore.com`. It owns all read and write paths for the registry: authentication, publishing, search, agent metadata, tarball serving, yank, reports. The CLI and the web frontend both consume it — the web Worker through a Cloudflare service binding, the CLI over public HTTPS.
 
 There is no second backend. The discovery website does not talk to D1 directly; it goes through the same API as `clawstore install`.
 
@@ -13,7 +13,7 @@ There is no second backend. The discovery website does not talk to D1 directly; 
 +-----+-----+          +-----+-----+
       |                      |
       | HTTPS                | Cloudflare
-      | api.clawstore.dev    | service binding
+      | api.useclawstore.com    | service binding
       |                      |
       v                      v
 +--------------------------------+
@@ -221,11 +221,11 @@ Limits may be tuned after launch based on observed traffic. They exist primarily
 
 ## Two subdomains
 
-`clawstore.dev` and `api.clawstore.dev` are separate Cloudflare Workers bound to the same D1, R2, and KV resources via SST links. The reasons this split exists rather than a single path-routed Worker:
+`useclawstore.com` and `api.useclawstore.com` are separate Cloudflare Workers bound to the same D1, R2, and KV resources via SST links. The reasons this split exists rather than a single path-routed Worker:
 
-- **Independent caching.** Tarball downloads from `api.clawstore.dev` get aggressive long-TTL CDN caching; the web app on `clawstore.dev` gets short-TTL HTML caching. A unified domain would require per-path cache rules, which is fragile.
-- **CORS is trivial.** The web app explicitly allows `clawstore.dev` as the origin for `api.clawstore.dev`. A single domain would need no CORS but makes local dev setup messier.
-- **CLI base URL is a constant.** `clawstore` CLI ships with `https://api.clawstore.dev/v1` hardcoded (overridable via env var). Future path changes to the web app never affect CLI clients.
+- **Independent caching.** Tarball downloads from `api.useclawstore.com` get aggressive long-TTL CDN caching; the web app on `useclawstore.com` gets short-TTL HTML caching. A unified domain would require per-path cache rules, which is fragile.
+- **CORS is trivial.** The web app explicitly allows `useclawstore.com` as the origin for `api.useclawstore.com`. A single domain would need no CORS but makes local dev setup messier.
+- **CLI base URL is a constant.** `clawstore` CLI ships with `https://api.useclawstore.com/v1` hardcoded (overridable via env var). Future path changes to the web app never affect CLI clients.
 - **The web Worker calls the API via a service binding, not HTTPS.** Same-binding calls are sub-millisecond regardless of the URL shape.
 
 ## Cross-references

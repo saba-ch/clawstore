@@ -20,7 +20,7 @@ The GitHub login (lowercased) becomes the user's **scope** — the `@scope` part
 
 The web frontend uses the GitHub OAuth flow end-to-end:
 
-1. Operator clicks "Sign in with GitHub" on `clawstore.dev`.
+1. Operator clicks "Sign in with GitHub" on `useclawstore.com`.
 2. Browser hits `GET /api/auth/sign-in/social/github` on the API Worker.
 3. Better Auth redirects to GitHub, GitHub redirects back to `GET /api/auth/callback/github`.
 4. Better Auth exchanges the code, creates the session, and sets the session cookie.
@@ -37,8 +37,8 @@ The CLI does not hold a session cookie. It holds an API token — an opaque bear
 The `clawstore login` loopback flow:
 
 1. CLI picks a high local port and starts a loopback HTTP listener at `http://127.0.0.1:<port>/callback`.
-2. CLI opens the operator's browser to `https://clawstore.dev/cli-login?port=<port>&state=<nonce>`.
-3. The operator authenticates with GitHub (Better Auth session is created on `clawstore.dev`).
+2. CLI opens the operator's browser to `https://useclawstore.com/cli-login?port=<port>&state=<nonce>`.
+3. The operator authenticates with GitHub (Better Auth session is created on `useclawstore.com`).
 4. The web frontend shows a one-click confirm: "Authorize CLI on this machine?" On confirm, the web frontend calls `POST /v1/tokens` with the session cookie, gets a fresh token (shown exactly once), and POSTs it back to the loopback at `http://127.0.0.1:<port>/callback` with the same `state` nonce.
 5. The CLI validates the nonce, stores the token in the OS keychain (fallback: `~/.clawstore/auth.json` with `0600`), prints success, and closes the loopback listener.
 
@@ -47,7 +47,7 @@ The loopback + nonce pattern is a standard CLI-OAuth dance. It keeps the token o
 ### Token lifetime
 
 - Tokens live until revoked. They do not expire on a clock.
-- Operators can list and revoke tokens from their `clawstore.dev` account page or via the CLI's `_debug` commands.
+- Operators can list and revoke tokens from their `useclawstore.com` account page or via the CLI's `_debug` commands.
 - Revocation is immediate — the API Worker checks the token against D1 on every request, so a revoked token fails with 401 on its next use.
 
 ### Token surface
@@ -118,9 +118,9 @@ On first sign-in, a Clawstore post-sign-in hook creates a row in the `profiles` 
 - `display_name` — GitHub's `name` field
 - `avatar_url` — GitHub's avatar URL
 
-Users can edit their profile (bio, website, location, display name) from the `clawstore.dev` account page via `PUT /v1/users/:username/profile`. The `github_login` field is read-only — it is the scope, and scopes do not change.
+Users can edit their profile (bio, website, location, display name) from the `useclawstore.com` account page via `PUT /v1/users/:username/profile`. The `github_login` field is read-only — it is the scope, and scopes do not change.
 
-Public profiles are served at `GET /v1/users/:username` and rendered on `clawstore.dev/users/:username`. They include the user's published packages with aggregate stats (download count, average rating). See [Backend API § User profiles](backend-api.md#user-profiles) and [Data Model § `profiles`](data-model.md#profiles).
+Public profiles are served at `GET /v1/users/:username` and rendered on `useclawstore.com/users/:username`. They include the user's published packages with aggregate stats (download count, average rating). See [Backend API § User profiles](backend-api.md#user-profiles) and [Data Model § `profiles`](data-model.md#profiles).
 
 ## Relationship to Better Auth tables
 

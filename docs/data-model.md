@@ -187,7 +187,7 @@ One row per user. Created on first GitHub sign-in, hydrated from the GitHub OAut
 - `PRIMARY KEY (user_id)`
 - `UNIQUE (github_login)`
 
-On first sign-in, Better Auth creates the `users` row. A Clawstore post-sign-in hook creates the `profiles` row, seeding `github_login`, `avatar_url`, and `display_name` from the GitHub OAuth response. If the user later edits their profile on `clawstore.dev`, only the `profiles` row is updated — the `users` row is never touched by Clawstore code.
+On first sign-in, Better Auth creates the `users` row. A Clawstore post-sign-in hook creates the `profiles` row, seeding `github_login`, `avatar_url`, and `display_name` from the GitHub OAuth response. If the user later edits their profile on `useclawstore.com`, only the `profiles` row is updated — the `users` row is never touched by Clawstore code.
 
 ### `categories`
 

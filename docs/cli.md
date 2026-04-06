@@ -55,7 +55,7 @@ These exist for debugging and bug reports. Not part of the stable CLI contract.
 
 ## Base URL
 
-The CLI ships with `https://api.clawstore.dev/v1` hardcoded as the default. Override via the `CLAWSTORE_API_URL` environment variable or the `apiUrl` key in `~/.clawstore/config.json`. Enterprise or private deployments should set this once at install time.
+The CLI ships with `https://api.useclawstore.com/v1` hardcoded as the default. Override via the `CLAWSTORE_API_URL` environment variable or the `apiUrl` key in `~/.clawstore/config.json`. Enterprise or private deployments should set this once at install time.
 
 ## Cross-references
 

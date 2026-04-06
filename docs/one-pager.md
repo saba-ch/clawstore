@@ -50,7 +50,7 @@ Any OpenClaw user  ->  clawstore CLI  ->  Clawstore API  ->  OpenClaw + ClawHub
 ```
 
 1. Authors publish agent packages through an authenticated API (`clawstore login` with GitHub, `clawstore publish`).
-2. Operators discover packages on `clawstore.dev` or via `clawstore search`.
+2. Operators discover packages on `useclawstore.com` or via `clawstore search`.
 3. The CLI downloads the package, resolves its plugin and skill dependencies through OpenClaw's existing install flows, prompts for required secrets, populates the workspace, and registers the agent.
 4. The package itself is inert content — markdown, JSON, images, reference files. No executable code, ever.
 
@@ -89,7 +89,7 @@ The boundary is deliberate: Clawstore ships the *app*, not the runtime. That kee
 - A diff UI that shows exactly which files and dependencies will change on update
 - Automatic snapshots before every update, with `clawstore rollback` as an escape hatch
 - A `clawstore doctor` command that detects and repairs drift between installed agents and their install records
-- `clawstore.dev` for browsing, searching, and inspecting packages before you install them
+- `useclawstore.com` for browsing, searching, and inspecting packages before you install them
 
 **For the ecosystem**:
 - Clawstore lives alongside OpenClaw and ClawHub. It never forks either, never patches core, never replaces the plugin or skill install flows.

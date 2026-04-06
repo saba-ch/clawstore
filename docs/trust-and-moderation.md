@@ -47,7 +47,7 @@ Every check that runs at publish time is listed in [Publish Flow § Step 6](publ
 
 Post-hoc. No human on the hot path. The pipeline:
 
-1. **Report.** Every detail page on `clawstore.dev` has a report button. Operators without accounts can file a report; rate-limited hard per IP (10 per hour — see [Backend API § Rate limits](backend-api.md#rate-limits)). Optional auth lets maintainers cross-reference reports against the reporter.
+1. **Report.** Every detail page on `useclawstore.com` has a report button. Operators without accounts can file a report; rate-limited hard per IP (10 per hour — see [Backend API § Rate limits](backend-api.md#rate-limits)). Optional auth lets maintainers cross-reference reports against the reporter.
 2. **Queue.** Reports land in the `reports` table in D1 and show up in the maintainer queue. See [Data Model § `reports`](data-model.md#reports).
 3. **Triage.** Maintainers review the report, fetch the offending version, and decide: dismiss, yank the version, delist the package, or escalate.
 4. **Action.**

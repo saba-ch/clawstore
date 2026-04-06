@@ -20,7 +20,7 @@ Clawstore distributes entire agents as installable products — persona, workspa
     +-----+-----+                    +-----+-----+
           |                                |
           | HTTPS                          | service binding
-          | api.clawstore.dev              | (no public hop)
+          | api.useclawstore.com              | (no public hop)
           v                                v
     +------------------------------------------------+
     |          Clawstore backend API                 |
@@ -49,8 +49,8 @@ Two Cloudflare Workers, one D1 database, one R2 bucket, one KV namespace. Everyt
 | Layer | Tech |
 |-------|------|
 | Infrastructure | SST v3 (Ion) on Cloudflare |
-| Backend API | Hono on Cloudflare Worker, hosted at `api.clawstore.dev` |
-| Frontend | TanStack Start (SSR) on Cloudflare Worker, hosted at `clawstore.dev` |
+| Backend API | Hono on Cloudflare Worker, hosted at `api.useclawstore.com` |
+| Frontend | TanStack Start (SSR) on Cloudflare Worker, hosted at `useclawstore.com` |
 | Auth | Better Auth via `better-auth-cloudflare` — GitHub OAuth, D1 session store, KV rate limiting |
 | Database | Cloudflare D1 (SQLite) + Drizzle ORM |
 | Object store | Cloudflare R2 (tarballs + extracted assets) |
@@ -96,7 +96,7 @@ Once a version is published, its tarball and metadata never change. Authors can 
 
 ### Website and CLI read from the same API
 
-`clawstore.dev` is a TanStack Start SSR app that calls the Hono API via a Cloudflare service binding. `clawstore install` is a Node CLI that calls the same API over public HTTPS. There is no separate "web backend" — the website has no direct database access. Single source of truth for business logic.
+`useclawstore.com` is a TanStack Start SSR app that calls the Hono API via a Cloudflare service binding. `clawstore install` is a Node CLI that calls the same API over public HTTPS. There is no separate "web backend" — the website has no direct database access. Single source of truth for business logic.
 
 ### D1 now, Postgres later, no panic in between
 
@@ -104,7 +104,7 @@ Cloudflare D1 is the launch database because it's cheapest, closest to the Worke
 
 ### Two subdomains, not one router
 
-`clawstore.dev` and `api.clawstore.dev` are separate Workers. Independent caching, simpler CORS, trivial CLI base URL. A single-domain path-routed topology was considered and rejected — the "one domain" benefit is cosmetic and costs complexity.
+`useclawstore.com` and `api.useclawstore.com` are separate Workers. Independent caching, simpler CORS, trivial CLI base URL. A single-domain path-routed topology was considered and rejected — the "one domain" benefit is cosmetic and costs complexity.
 
 ## Documents
 

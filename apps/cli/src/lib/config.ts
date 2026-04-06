@@ -6,7 +6,7 @@ const CONFIG_DIR = join(homedir(), ".clawstore");
 const CONFIG_FILE = join(CONFIG_DIR, "config.json");
 const AUTH_FILE = join(CONFIG_DIR, "auth.json");
 
-export const DEFAULT_API_URL = "https://api.clawstore.dev/v1";
+export const DEFAULT_API_URL = "https://api.useclawstore.com/v1";
 
 export interface Config {
   apiUrl?: string;
