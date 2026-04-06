@@ -23,26 +23,17 @@
 
 ---
 
-[OpenClaw](https://github.com/openclaw/openclaw) is a framework for building AI agents. But there's no central place to share and discover agents built with it.
+Thousands of AI agents are being built with [OpenClaw](https://github.com/openclaw/openclaw). **Clawstore is where they go live.**
 
-**Clawstore fills that gap** — a package registry, CLI, and web storefront for OpenClaw agents. Authors publish agent packages, users browse and install them with one command.
+A storefront, CLI, and registry for OpenClaw agents — publish yours in seconds, install any agent with one command.
 
 ```bash
-# Install the CLI
 npm install -g clawstore
 
-# Search for agents
-clawstore search "productivity"
-
-# Install an agent
-clawstore install @saba-ch/calorie-coach
-
-# Publish your own
-clawstore login
-clawstore publish ./my-agent
+clawstore search "productivity"       # Find agents
+clawstore install @saba-ch/coach      # Install one
+clawstore publish ./my-agent          # Ship yours
 ```
-
-> Third-party project — not a fork of or contribution to OpenClaw core.
 
 ## Quickstart
 
