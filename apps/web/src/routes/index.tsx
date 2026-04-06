@@ -42,6 +42,13 @@ function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             {/* Left: text */}
             <div>
+              <div className="mb-6">
+                <img
+                  src="/favicon.svg"
+                  alt="Clawstore"
+                  className="w-20 h-20 sm:w-24 sm:h-24 drop-shadow-[0_0_24px_rgba(255,77,77,0.3)]"
+                />
+              </div>
               <h1 className="text-4xl sm:text-5xl font-black text-white mb-5 tracking-tight leading-[1.1]">
                 The app store for{" "}
                 <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
