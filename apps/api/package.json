@@ -7,13 +7,19 @@
     "build": "tsc --noEmit",
     "deploy": "wrangler deploy --minify",
     "check-types": "tsc --noEmit",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
-    "hono": "^4.12.11"
+    "@hono/zod-validator": "^0.7.6",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.11",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250410.0",
+    "drizzle-kit": "^0.31.10",
     "typescript": "^5.8.0",
     "wrangler": "^4.4.0"
   }
