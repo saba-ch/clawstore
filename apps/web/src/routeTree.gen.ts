@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as DeviceRouteImport } from './routes/device'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UsersUsernameRouteImport } from './routes/users.$username'
@@ -18,6 +19,11 @@ import { Route as AgentsScopeNameRouteImport } from './routes/agents.$scope.$nam
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeviceRoute = DeviceRouteImport.update({
+  id: '/device',
+  path: '/device',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BrowseRoute = BrowseRouteImport.update({
@@ -44,6 +50,7 @@ const AgentsScopeNameRoute = AgentsScopeNameRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/device': typeof DeviceRoute
   '/search': typeof SearchRoute
   '/users/$username': typeof UsersUsernameRoute
   '/agents/$scope/$name': typeof AgentsScopeNameRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/device': typeof DeviceRoute
   '/search': typeof SearchRoute
   '/users/$username': typeof UsersUsernameRoute
   '/agents/$scope/$name': typeof AgentsScopeNameRoute
@@ -59,6 +67,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/device': typeof DeviceRoute
   '/search': typeof SearchRoute
   '/users/$username': typeof UsersUsernameRoute
   '/agents/$scope/$name': typeof AgentsScopeNameRoute
@@ -68,15 +77,23 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/browse'
+    | '/device'
     | '/search'
     | '/users/$username'
     | '/agents/$scope/$name'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/browse' | '/search' | '/users/$username' | '/agents/$scope/$name'
+  to:
+    | '/'
+    | '/browse'
+    | '/device'
+    | '/search'
+    | '/users/$username'
+    | '/agents/$scope/$name'
   id:
     | '__root__'
     | '/'
     | '/browse'
+    | '/device'
     | '/search'
     | '/users/$username'
     | '/agents/$scope/$name'
@@ -85,6 +102,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BrowseRoute: typeof BrowseRoute
+  DeviceRoute: typeof DeviceRoute
   SearchRoute: typeof SearchRoute
   UsersUsernameRoute: typeof UsersUsernameRoute
   AgentsScopeNameRoute: typeof AgentsScopeNameRoute
@@ -97,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/device': {
+      id: '/device'
+      path: '/device'
+      fullPath: '/device'
+      preLoaderRoute: typeof DeviceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/browse': {
@@ -133,6 +158,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BrowseRoute: BrowseRoute,
+  DeviceRoute: DeviceRoute,
   SearchRoute: SearchRoute,
   UsersUsernameRoute: UsersUsernameRoute,
   AgentsScopeNameRoute: AgentsScopeNameRoute,

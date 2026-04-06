@@ -40,7 +40,7 @@ export function createAuth(env: Bindings, baseURL: string) {
     plugins: [
       bearer(),
       deviceAuthorization({
-        verificationUri: "/device",
+        verificationUri: "http://localhost:3000/device",
       }),
     ],
   });
