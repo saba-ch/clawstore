@@ -94,7 +94,11 @@ export const publishCommand = new Command("publish")
       console.log(`  SHA-256: ${res.tarballSha256}`);
       console.log(`  Size:    ${(res.tarballSizeBytes / 1024).toFixed(1)} KB`);
     } catch (err: any) {
-      console.error(`\nPublish failed: ${err.message}`);
+      const code = err.code ? `[${err.code}] ` : "";
+      console.error(`\nPublish failed: ${code}${err.message}`);
+      if (err.details) {
+        console.error(`  Details: ${JSON.stringify(err.details)}`);
+      }
       process.exit(1);
     }
   });

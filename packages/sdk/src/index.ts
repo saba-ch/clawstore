@@ -1,4 +1,4 @@
-export { createClient } from "./client.js";
+export { createClient, ClawstoreApiError } from "./client.js";
 export type { ClientConfig, ClawstoreClient } from "./client.js";
 export type {
   Agent,

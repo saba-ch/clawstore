@@ -10,26 +10,36 @@ export const searchCommand = new Command("search")
   .option("-l, --limit <n>", "Results per page", "20")
   .action(async (query: string, opts) => {
     const client = await getClient();
-    const result = await client.searchAgents({
-      q: query,
-      category: opts.category,
-      tag: opts.tag,
-      sort: opts.sort,
-      limit: Number(opts.limit),
-    });
 
-    if (result.items.length === 0) {
-      console.log("No agents found.");
-      return;
-    }
+    try {
+      const result = await client.searchAgents({
+        q: query,
+        category: opts.category,
+        tag: opts.tag,
+        sort: opts.sort,
+        limit: Number(opts.limit),
+      });
 
-    for (const a of result.items) {
-      const rating = a.avgRating ? `${a.avgRating.toFixed(1)}★` : "no ratings";
-      console.log(`  @${a.scope}/${a.name} — ${a.tagline}`);
-      console.log(`    ${a.downloadCount} downloads · ${rating} · ${a.category}\n`);
-    }
+      if (result.items.length === 0) {
+        console.log("No agents found.");
+        return;
+      }
 
-    if (result.nextCursor) {
-      console.log(`  ... more results available`);
+      for (const a of result.items) {
+        const rating = a.avgRating ? `${a.avgRating.toFixed(1)}★` : "no ratings";
+        console.log(`  @${a.scope}/${a.name} — ${a.tagline}`);
+        console.log(`    ${a.downloadCount} downloads · ${rating} · ${a.category}\n`);
+      }
+
+      if (result.nextCursor) {
+        console.log(`  ... more results available`);
+      }
+    } catch (err: any) {
+      const code = err.code ? `[${err.code}] ` : "";
+      console.error(`Search failed: ${code}${err.message}`);
+      if (err.details) {
+        console.error(`  Details: ${JSON.stringify(err.details)}`);
+      }
+      process.exit(1);
     }
   });

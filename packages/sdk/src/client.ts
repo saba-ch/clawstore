@@ -122,7 +122,7 @@ export interface ClawstoreClient {
   ): Promise<{ ok: boolean }>;
 }
 
-class ClawstoreApiError extends Error {
+export class ClawstoreApiError extends Error {
   constructor(
     public readonly status: number,
     public readonly code: string,

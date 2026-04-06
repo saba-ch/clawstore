@@ -40,7 +40,11 @@ export const infoCommand = new Command("info")
 
       console.log();
     } catch (err: any) {
-      console.error(err.message);
+      const code = err.code ? `[${err.code}] ` : "";
+      console.error(`${code}${err.message}`);
+      if (err.details) {
+        console.error(`  Details: ${JSON.stringify(err.details)}`);
+      }
       process.exit(1);
     }
   });

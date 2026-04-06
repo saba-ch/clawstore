@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { resolve, join } from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
+import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import * as tar from "tar";
@@ -25,57 +26,82 @@ export const installCommand = new Command("install")
 
     const client = await getClient();
 
-    // Resolve version
-    let version: string;
-    if (versionPart) {
-      version = versionPart;
-    } else {
-      const agent = await client.getAgent(scope, name);
-      if (!agent.latestVersion) {
-        console.error("No published versions found.");
+    try {
+      // Resolve version
+      let version: string;
+      if (versionPart) {
+        version = versionPart;
+      } else {
+        const agent = await client.getAgent(scope, name);
+        if (!agent.latestVersion) {
+          console.error("No published versions found.");
+          process.exit(1);
+        }
+        version = agent.latestVersion.version;
+      }
+
+      console.log(`Installing @${scope}/${name}@${version}...`);
+
+      // Download tarball
+      const tarballUrl = client.getTarballUrl(scope, name, version);
+      const res = await fetch(tarballUrl);
+      if (!res.ok) {
+        console.error(`Download failed: HTTP ${res.status}`);
         process.exit(1);
       }
-      version = agent.latestVersion.version;
-    }
 
-    console.log(`Installing @${scope}/${name}@${version}...`);
+      // Read tarball into buffer for integrity check
+      const tarballBuffer = Buffer.from(await res.arrayBuffer());
 
-    // Download tarball
-    const tarballUrl = client.getTarballUrl(scope, name, version);
-    const res = await fetch(tarballUrl);
-    if (!res.ok) {
-      console.error(`Download failed: HTTP ${res.status}`);
+      // Verify SHA-256 integrity
+      const versionDetail = await client.getVersion(scope, name, version);
+      const expectedSha = versionDetail.tarballSha256;
+      const actualSha = createHash("sha256").update(tarballBuffer).digest("hex");
+      if (actualSha !== expectedSha) {
+        console.error(`Integrity check failed!`);
+        console.error(`  Expected SHA-256: ${expectedSha}`);
+        console.error(`  Actual SHA-256:   ${actualSha}`);
+        console.error(`Aborting install.`);
+        process.exit(1);
+      }
+      console.log(`SHA-256 verified: ${actualSha}`);
+
+      // Extract to workspace
+      const workspaceDir = join(homedir(), ".openclaw", `workspace-${name}`);
+      await mkdir(workspaceDir, { recursive: true });
+
+      const body = Readable.from(tarballBuffer);
+      await pipeline(body, tar.extract({ cwd: workspaceDir }));
+
+      // Write install record
+      const configDir = await getConfigDir();
+      const installsDir = join(configDir, "installs");
+      await mkdir(installsDir, { recursive: true });
+
+      const record = {
+        id: `@${scope}/${name}`,
+        version,
+        scope,
+        name,
+        workspacePath: workspaceDir,
+        installedAt: new Date().toISOString(),
+        source: "registry",
+        updatePolicy: "manual",
+      };
+
+      await writeFile(
+        join(installsDir, `${name}.json`),
+        JSON.stringify(record, null, 2)
+      );
+
+      console.log(`\nInstalled to ${workspaceDir}`);
+      console.log(`Run your agent with: openclaw agents add ${name} --workspace ${workspaceDir}`);
+    } catch (err: any) {
+      const code = err.code ? `[${err.code}] ` : "";
+      console.error(`Install failed: ${code}${err.message}`);
+      if (err.details) {
+        console.error(`  Details: ${JSON.stringify(err.details)}`);
+      }
       process.exit(1);
     }
-
-    // Extract to workspace
-    const workspaceDir = join(homedir(), ".openclaw", `workspace-${name}`);
-    await mkdir(workspaceDir, { recursive: true });
-
-    const body = Readable.fromWeb(res.body as any);
-    await pipeline(body, tar.extract({ cwd: workspaceDir }));
-
-    // Write install record
-    const configDir = await getConfigDir();
-    const installsDir = join(configDir, "installs");
-    await mkdir(installsDir, { recursive: true });
-
-    const record = {
-      id: `@${scope}/${name}`,
-      version,
-      scope,
-      name,
-      workspacePath: workspaceDir,
-      installedAt: new Date().toISOString(),
-      source: "registry",
-      updatePolicy: "manual",
-    };
-
-    await writeFile(
-      join(installsDir, `${name}.json`),
-      JSON.stringify(record, null, 2)
-    );
-
-    console.log(`\nInstalled to ${workspaceDir}`);
-    console.log(`Run your agent with: openclaw agents add ${name} --workspace ${workspaceDir}`);
   });

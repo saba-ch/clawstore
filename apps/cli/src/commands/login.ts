@@ -1,11 +1,22 @@
 import { Command } from "commander";
 import * as p from "@clack/prompts";
-import { writeToken, getApiUrl } from "../lib/config.js";
+import { writeToken, readToken, getApiUrl } from "../lib/config.js";
 
 export const loginCommand = new Command("login")
   .description("Authenticate with GitHub OAuth via device flow")
-  .action(async () => {
+  .option("--force", "Re-authenticate even if already logged in")
+  .action(async (opts) => {
     p.intro("clawstore login");
+
+    // Check if already logged in
+    if (!opts.force) {
+      const existingToken = await readToken();
+      if (existingToken) {
+        p.log.info("Already logged in. Run with --force to re-authenticate.");
+        p.outro("");
+        return;
+      }
+    }
 
     const apiUrl = await getApiUrl();
     const baseUrl = apiUrl.replace(/\/v1$/, "");

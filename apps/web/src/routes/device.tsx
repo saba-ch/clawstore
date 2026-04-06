@@ -15,6 +15,7 @@ function DevicePage() {
   const { user_code } = Route.useSearch();
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{
     type: "success" | "error";
     message: string;
@@ -35,10 +36,12 @@ function DevicePage() {
   };
 
   const handleApprove = async () => {
-    if (!user_code) return;
+    if (!user_code || submitting) return;
+    setSubmitting(true);
     const { error } = await authClient.device.approve({ userCode: user_code });
     if (error) {
       setResult({ type: "error", message: error.message ?? "Failed to approve" });
+      setSubmitting(false);
     } else {
       setResult({
         type: "success",
@@ -48,7 +51,8 @@ function DevicePage() {
   };
 
   const handleDeny = async () => {
-    if (!user_code) return;
+    if (!user_code || submitting) return;
+    setSubmitting(true);
     await authClient.device.deny({ userCode: user_code });
     setResult({ type: "error", message: "Denied. You can close this tab." });
   };
@@ -57,6 +61,22 @@ function DevicePage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user_code) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <div className="bg-slate-800 border border-slate-700 rounded-xl p-8 max-w-sm w-full text-center">
+          <h1 className="text-xl font-semibold text-white mb-2">
+            No device code provided
+          </h1>
+          <p className="text-sm text-gray-400">
+            Start the login flow from your terminal with{" "}
+            <code className="text-cyan-400">clawstore login</code>.
+          </p>
+        </div>
       </div>
     );
   }
@@ -73,7 +93,7 @@ function DevicePage() {
 
         {/* Device code */}
         <div className="font-mono text-3xl font-bold tracking-widest text-cyan-400 bg-slate-900 rounded-lg py-3 px-6 mb-6 inline-block">
-          {user_code ?? "——"}
+          {user_code}
         </div>
 
         <p className="text-sm text-gray-400 mb-6">
@@ -101,13 +121,15 @@ function DevicePage() {
           <div className="flex justify-center gap-3">
             <button
               onClick={handleApprove}
-              className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-lg transition-colors"
+              disabled={submitting}
+              className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Approve
             </button>
             <button
               onClick={handleDeny}
-              className="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-gray-300 font-medium rounded-lg transition-colors"
+              disabled={submitting}
+              className="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-gray-300 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Deny
             </button>

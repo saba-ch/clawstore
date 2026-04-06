@@ -28,6 +28,12 @@ export const Route = createFileRoute('/browse')({
     return { agents: agents.items, categories, filters: deps }
   },
   component: BrowsePage,
+  errorComponent: ({ error }) => (
+    <div className="max-w-3xl mx-auto px-6 py-20 text-center">
+      <h1 className="text-xl font-semibold text-white mb-2">Something went wrong</h1>
+      <p className="text-gray-400">{error.message}</p>
+    </div>
+  ),
 })
 
 function BrowsePage() {

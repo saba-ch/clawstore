@@ -18,7 +18,11 @@ export const yankCommand = new Command("yank")
       await client.yank(scope, name, version, opts.reason);
       console.log(`Yanked @${scope}/${name}@${version}`);
     } catch (err: any) {
-      console.error(`Yank failed: ${err.message}`);
+      const code = err.code ? `[${err.code}] ` : "";
+      console.error(`Yank failed: ${code}${err.message}`);
+      if (err.details) {
+        console.error(`  Details: ${JSON.stringify(err.details)}`);
+      }
       process.exit(1);
     }
   });

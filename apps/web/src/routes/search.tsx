@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { api } from '../lib/api'
 import type { Agent } from '@clawstore/sdk'
 
@@ -16,6 +16,12 @@ export const Route = createFileRoute('/search')({
     return { agents: result.items, query: deps.q }
   },
   component: SearchPage,
+  errorComponent: ({ error }) => (
+    <div className="max-w-3xl mx-auto px-6 py-20 text-center">
+      <h1 className="text-xl font-semibold text-white mb-2">Something went wrong</h1>
+      <p className="text-gray-400">{error.message}</p>
+    </div>
+  ),
 })
 
 function SearchPage() {
@@ -23,16 +29,17 @@ function SearchPage() {
   const navigate = useNavigate()
   const [input, setInput] = useState(query)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (input.trim()) {
+  useEffect(() => {
+    if (!input.trim()) return
+    const timer = setTimeout(() => {
       navigate({ to: '/search', search: { q: input.trim() } })
-    }
-  }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [input])
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-8">
-      <form onSubmit={handleSubmit} className="mb-8">
+      <form onSubmit={(e) => e.preventDefault()} className="mb-8">
         <input
           type="text"
           value={input}

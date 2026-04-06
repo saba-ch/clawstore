@@ -9,6 +9,8 @@ export type Bindings = {
   GITHUB_CLIENT_ID: string;
   GITHUB_CLIENT_SECRET: string;
   BETTER_AUTH_SECRET: string;
+  DEVICE_VERIFICATION_URI?: string;
+  CORS_ORIGINS?: string;
 };
 
 export type AppEnv = {

@@ -13,13 +13,14 @@ const app = new Hono<AppEnv>();
 
 app.onError(errorHandler);
 
-app.use(
-  "*",
-  cors({
-    origin: ["https://useclawstore.com", "http://localhost:3000"],
-    credentials: true,
-  })
-);
+app.use("*", async (c, next) => {
+  const defaultOrigins = ["https://useclawstore.com", "http://localhost:3000"];
+  const origins = c.env.CORS_ORIGINS
+    ? c.env.CORS_ORIGINS.split(",").map((o: string) => o.trim())
+    : defaultOrigins;
+  const mw = cors({ origin: origins, credentials: true });
+  return mw(c, next);
+});
 
 app.use("*", async (c, next) => {
   c.set("db", createDb(c.env.Database));
