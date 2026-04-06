@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { eq, and, like, or, desc, asc, sql } from "drizzle-orm";
-import { agents, agentTags } from "../../db/schema";
+import { eq, and, like, or, desc, asc, sql, isNull } from "drizzle-orm";
+import { agents, agentTags, versions } from "../../db/schema";
 import type { AppEnv } from "../../types";
 
 const app = new Hono<AppEnv>();
@@ -35,6 +35,14 @@ app.get("/", async (c) => {
     .$dynamic();
 
   const conditions = [];
+
+  // Exclude agents where all versions are yanked
+  const hasActiveVersion = db
+    .select({ agentId: versions.agentId })
+    .from(versions)
+    .where(and(eq(versions.agentId, agents.id), isNull(versions.yankedAt)))
+    .limit(1);
+  conditions.push(sql`EXISTS (${hasActiveVersion})`);
 
   if (q) {
     const pattern = `%${q}%`;
