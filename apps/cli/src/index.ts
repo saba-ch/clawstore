@@ -3,6 +3,7 @@ import { initCommand } from "./commands/init.js";
 import { validateCommand } from "./commands/validate.js";
 import { packCommand } from "./commands/pack.js";
 import { loginCommand } from "./commands/login.js";
+import { whoamiCommand } from "./commands/whoami.js";
 import { publishCommand } from "./commands/publish.js";
 import { yankCommand } from "./commands/yank.js";
 import { searchCommand } from "./commands/search.js";
@@ -23,6 +24,7 @@ program.addCommand(initCommand);
 program.addCommand(validateCommand);
 program.addCommand(packCommand);
 program.addCommand(loginCommand);
+program.addCommand(whoamiCommand);
 program.addCommand(publishCommand);
 program.addCommand(yankCommand);
 

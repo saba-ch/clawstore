@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import * as p from "@clack/prompts";
 import { writeToken, readToken, getApiUrl } from "../lib/config.js";
+import { createClient } from "@clawstore/sdk";
 
 export const loginCommand = new Command("login")
   .description("Authenticate with GitHub OAuth via device flow")
@@ -8,13 +9,20 @@ export const loginCommand = new Command("login")
   .action(async (opts) => {
     p.intro("clawstore login");
 
-    // Check if already logged in
+    // Check if already logged in and token is still valid
     if (!opts.force) {
       const existingToken = await readToken();
       if (existingToken) {
-        p.log.info("Already logged in. Run with --force to re-authenticate.");
-        p.outro("");
-        return;
+        try {
+          const baseUrl = await getApiUrl();
+          const client = createClient({ baseUrl, token: existingToken });
+          const me = await client.getMe();
+          p.log.info(`Already logged in as ${me.scope ?? me.name}. Run with --force to re-authenticate.`);
+          p.outro("");
+          return;
+        } catch {
+          p.log.warn("Saved token is invalid or expired. Re-authenticating...");
+        }
       }
     }
 

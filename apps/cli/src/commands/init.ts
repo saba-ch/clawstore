@@ -3,6 +3,7 @@ import * as p from "@clack/prompts";
 import { writeFile, readdir } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { SCHEMA_VERSION } from "@clawstore/schema";
+import { getClient } from "../lib/client.js";
 
 const CANONICAL_ENTRYPOINTS = [
   "AGENTS.md",
@@ -36,6 +37,8 @@ export const initCommand = new Command("init")
   .option("--name <name>", "Display name")
   .option("--tagline <tagline>", "One-line tagline")
   .option("--category <category>", `Category (${VALID_CATEGORIES.join(", ")})`)
+  .option("--description <description>", "Short description")
+  .option("--author <author>", "Author name")
   .option("--license <license>", "License", "MIT")
   .option("--model <model>", "Default LLM model")
   .action(async (path: string, opts) => {
@@ -63,7 +66,9 @@ export const initCommand = new Command("init")
       id: string;
       name: string;
       tagline: string;
+      description: string;
       category: string;
+      author: string;
       license: string;
       model: string;
     };
@@ -83,13 +88,27 @@ export const initCommand = new Command("init")
         id: opts.id,
         name: opts.name,
         tagline: opts.tagline,
+        description: opts.description || opts.tagline,
         category: opts.category,
+        author: opts.author || "",
         license: opts.license,
         model: opts.model,
       };
     } else {
       // Interactive mode
       p.intro("clawstore init");
+
+      // Try to detect scope from logged-in user
+      let detectedScope: string | null = null;
+      let detectedAuthor: string | null = null;
+      try {
+        const client = await getClient();
+        const me = await client.getMe();
+        detectedScope = me.scope ?? null;
+        detectedAuthor = me.name ?? null;
+      } catch {
+        // Not logged in or API error — skip
+      }
 
       if (detected.length > 0) {
         p.note(detected.join(", "), "Detected workspace files");
@@ -100,7 +119,7 @@ export const initCommand = new Command("init")
           id: () =>
             p.text({
               message: "Package ID (@scope/name)",
-              placeholder: "@yourname/my-agent",
+              placeholder: detectedScope ? `@${detectedScope}/my-agent` : "@yourname/my-agent",
               ...(opts.id ? { initialValue: opts.id } : {}),
               validate: (v) =>
                 /^@[a-z0-9-]+\/[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(v)
@@ -118,6 +137,12 @@ export const initCommand = new Command("init")
               message: "One-line tagline",
               placeholder: "What does this agent do?",
               ...(opts.tagline ? { initialValue: opts.tagline } : {}),
+            }),
+          description: () =>
+            p.text({
+              message: "Short description",
+              placeholder: "A brief description of what this agent does",
+              ...(opts.description ? { initialValue: opts.description } : {}),
             }),
           category: () =>
             p.select({
@@ -137,6 +162,12 @@ export const initCommand = new Command("init")
                 { value: "customer-support", label: "Customer Support" },
                 { value: "other", label: "Other" },
               ],
+            }),
+          author: () =>
+            p.text({
+              message: "Author name",
+              placeholder: "Your name",
+              ...(opts.author ? { initialValue: opts.author } : detectedAuthor ? { initialValue: detectedAuthor } : {}),
             }),
           license: () =>
             p.text({
@@ -172,10 +203,10 @@ export const initCommand = new Command("init")
       version: "0.1.0",
       name: answers.name,
       tagline: answers.tagline,
-      description: "",
+      description: answers.description || answers.tagline,
       category: answers.category,
       tags: [],
-      author: { name: "" },
+      author: { name: answers.author || "" },
       license: answers.license,
       agent: {
         defaults: {
