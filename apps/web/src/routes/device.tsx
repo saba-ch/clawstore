@@ -30,7 +30,7 @@ function DevicePage() {
   const handleSignIn = () => {
     authClient.signIn.social({
       provider: "github",
-      callbackURL: `/device?user_code=${user_code}`,
+      callbackURL: `${window.location.origin}/device?user_code=${user_code}`,
     });
   };
 
