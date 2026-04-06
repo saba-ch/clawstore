@@ -17,7 +17,7 @@ const program = new Command();
 program
   .name("clawstore")
   .description("CLI for the ClawStore agent package registry")
-  .version("0.1.5");
+  .version("0.1.6");
 
 // Author commands
 program.addCommand(initCommand);

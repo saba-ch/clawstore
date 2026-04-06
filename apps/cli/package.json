@@ -1,6 +1,6 @@
 {
   "name": "clawstore",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Clawstore — the app store for AI agents. Discover, install, and publish OpenClaw agents.",
   "keywords": [
     "openclaw",
