@@ -103,8 +103,24 @@ One owner per id at MVP. Ownership transfer (e.g. handing a package to a differe
 | Delist a package | ❌ | ✅ | ❌ |
 | View package detail | ✅ | ✅ | ✅ |
 | File a report | ✅ | ✅ | ✅ |
+| Review a package | ❌ | ✅ (authenticated) | ✅ (authenticated) |
+| Delete any review | ❌ | ✅ | ❌ |
 
 The "owner cannot unyank" rule exists because yanking is usually a response to a real problem with a version. Reversing that decision should require a second pair of eyes.
+
+The "owner cannot review own package" rule prevents self-promotion. Owners see their package's reviews but cannot participate as reviewers. Maintainers can delete any review (spam, abuse) but cannot edit another user's review text or rating.
+
+## Profile enrichment
+
+On first sign-in, a Clawstore post-sign-in hook creates a row in the `profiles` table alongside the Better Auth `users` row. The profile is seeded from the GitHub OAuth payload:
+
+- `github_login` — the lowercased GitHub username (also the user's scope)
+- `display_name` — GitHub's `name` field
+- `avatar_url` — GitHub's avatar URL
+
+Users can edit their profile (bio, website, location, display name) from the `clawstore.dev` account page via `PUT /v1/users/:username/profile`. The `github_login` field is read-only — it is the scope, and scopes do not change.
+
+Public profiles are served at `GET /v1/users/:username` and rendered on `clawstore.dev/users/:username`. They include the user's published packages with aggregate stats (download count, average rating). See [Backend API § User profiles](backend-api.md#user-profiles) and [Data Model § `profiles`](data-model.md#profiles).
 
 ## Relationship to Better Auth tables
 

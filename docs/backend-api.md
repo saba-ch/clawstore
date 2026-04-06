@@ -80,7 +80,16 @@ Better Auth routes live under `/api/auth/*` and are versioned independently by t
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/v1/me` | required | Return the authenticated user's identity: `{ id, githubLogin, scope, createdAt, ownedPackageCount }`. |
+| `GET` | `/v1/me` | required | Return the authenticated user's identity and profile: `{ id, githubLogin, scope, createdAt, ownedPackageCount, profile: { bio, website, location, avatarUrl, displayName } }`. |
+
+### User profiles
+
+Public profiles for any user. Profile data is seeded from GitHub on first sign-in and editable by the owner.
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET`  | `/v1/users/:username`          | none     | Public profile: `{ githubLogin, displayName, avatarUrl, bio, website, location, createdAt, packages: [{ scope, name, tagline, avgRating, downloadCount }] }`. |
+| `PUT`  | `/v1/users/:username/profile`  | required | Update the caller's own profile. Body: `{ bio?, website?, location?, displayName? }`. Returns 403 if `:username` does not match the caller's scope. |
 
 ### Package listing and search
 
@@ -102,7 +111,7 @@ Query params for `GET /v1/packages`:
 | `tag` | string | Filter by tag. Repeatable. |
 | `channel` | `community`\|`official` | Filter by channel. Defaults to all visible channels. |
 | `scope` | string | Filter by publisher scope. |
-| `sort` | `recent`\|`name`\|`downloads` | Sort order. Defaults to `recent`. |
+| `sort` | `recent`\|`name`\|`downloads`\|`rating` | Sort order. Defaults to `recent`. |
 | `limit` | int | Page size. 1–100. Defaults to 20. |
 | `cursor` | string | Pagination cursor returned by the previous response. |
 
@@ -157,6 +166,21 @@ This is a single round-trip for the common case where an operator has 10 install
 
 Reports land in the database for maintainer triage. There is no pre-publish human review — moderation is entirely post-hoc. See [Documentation hub § Open publish](README.md#open-publish-through-an-authenticated-api).
 
+### Reviews
+
+Authenticated users can leave one review per package. Authors cannot review their own packages. Reviews carry a 1–5 star rating and optional text.
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET`    | `/v1/packages/:scope/:name/reviews`     | none     | List reviews for a package. Paginated, sorted by `created_at DESC`. Response includes `avgRating` and `reviewCount` in metadata. |
+| `POST`   | `/v1/packages/:scope/:name/reviews`     | required | Create a review. Body: `{ rating, title?, body? }`. Returns 409 if the user already reviewed this package. Returns 403 if the user is the package owner. |
+| `PUT`    | `/v1/packages/:scope/:name/reviews/:id` | required | Update the caller's own review. Body: `{ rating?, title?, body? }`. Returns 403 if the review belongs to another user. |
+| `DELETE` | `/v1/packages/:scope/:name/reviews/:id` | required | Delete the caller's own review, or any review if the caller is a maintainer. |
+
+On every write operation (create, update, delete), the API recalculates `packages.avg_rating` and `packages.review_count` inline.
+
+Package detail responses (`GET /v1/packages/:scope/:name`) include `avgRating`, `reviewCount`, and `downloadCount` alongside existing fields.
+
 ## Response shapes
 
 ### Success
@@ -195,6 +219,7 @@ Rate limits are enforced via Better Auth's KV-backed rate limiter for auth endpo
 | `/api/auth/*`                     | 100 | 1 minute |
 | `POST /v1/publish`                | 20  | 1 hour (per user) |
 | `POST /v1/reports`                | 10  | 1 hour (per IP) |
+| `POST/PUT/DELETE /v1/.../reviews` | 30  | 1 hour (per user) |
 | `POST /v1/tokens`                 | 10  | 1 hour (per user) |
 | All other `GET /v1/*` (read)      | 600 | 1 minute |
 | All other `POST /v1/*` (write)    | 60  | 1 minute |

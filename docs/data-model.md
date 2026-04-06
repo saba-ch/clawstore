@@ -42,6 +42,9 @@ One row per claimed package ID. A row exists from the moment a user publishes th
 | `homepage` | `text?` | Optional project URL. |
 | `repository` | `text?` | Optional source repo URL. |
 | `license` | `text` | SPDX identifier. |
+| `download_count` | `integer` | Cached sum of `download_count` across all versions. Refreshed on tarball download. Best-effort, not transactional. |
+| `avg_rating` | `real` | Cached average star rating (1.0–5.0). NULL if no reviews. Refreshed on review insert/update/delete. |
+| `review_count` | `integer` | Cached count of reviews. Refreshed alongside `avg_rating`. |
 | `created_at` | `timestamp` | First publish time. |
 | `updated_at` | `timestamp` | Last publish or metadata refresh. |
 
@@ -49,8 +52,12 @@ One row per claimed package ID. A row exists from the moment a user publishes th
 - `UNIQUE (scope, name)`
 - Indexes on `scope`, `name`, `category`, `owner_user_id`, `updated_at`
 - LIKE-friendly indexes on `display_name` and `tagline` for search
+- Index on `download_count` (for `sort=downloads`)
+- Index on `avg_rating` (for `sort=rating`)
 
 The denormalized `description`, `tagline`, `display_name` fields are snapshots from the most recently published version's manifest. They are refreshed on publish and on metadata refresh. This avoids a join to `versions` for every search query.
+
+The denormalized `download_count`, `avg_rating`, and `review_count` fields are aggregates cached on the package row for search sorting and listing performance. `download_count` is refreshed on every tarball download (best-effort). `avg_rating` and `review_count` are refreshed on every review insert, update, or delete.
 
 ### `versions`
 
@@ -154,6 +161,53 @@ Moderation queue. Filled by the public `POST /v1/reports` endpoint, drained by m
 - Index on `package_id`
 - Index on `reporter_ip_hash` (for rate limiting)
 
+### `reviews`
+
+One row per user per package. An authenticated user may leave one review for a package they do not own. Reviews carry a 1–5 star rating and an optional text body.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `text` (UUID) | Primary key. |
+| `package_id` | `text` (fk → `packages.id`) | The package being reviewed. |
+| `reviewer_user_id` | `text` (fk → `users.id`) | The user who wrote the review. |
+| `rating` | `integer` | Star rating, 1–5. Enforced in application code. |
+| `title` | `text?` | Optional short summary. Max 120 chars. |
+| `body` | `text?` | Optional long-form review text. Max 2000 chars. |
+| `created_at` | `timestamp` | When the review was posted. |
+| `updated_at` | `timestamp` | Last edit time. Equals `created_at` if never edited. |
+
+**Constraints**
+- `UNIQUE (package_id, reviewer_user_id)` — one review per user per package
+- Index on `package_id` (for listing reviews on a package detail page)
+- Index on `reviewer_user_id` (for user profile "my reviews" queries)
+- Index on `(package_id, created_at DESC)` (for paginated review feeds)
+
+On insert, update, or delete, the API recalculates `packages.avg_rating` and `packages.review_count` from the surviving rows. This is a simple `AVG(rating)` / `COUNT(*)` over the `reviews` table filtered by `package_id`. At MVP scale this is fast enough inline; at scale it moves to a background job.
+
+Authors cannot review their own packages — the backend rejects with 403 if `reviewer_user_id === packages.owner_user_id`.
+
+### `profiles`
+
+One row per user. Created on first GitHub sign-in, hydrated from the GitHub OAuth payload. Users may update their profile from the web frontend.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `user_id` | `text` (fk → `users.id`) | Primary key. One-to-one with `users`. |
+| `bio` | `text?` | Short bio. Max 280 chars. |
+| `website` | `text?` | URL. Validated format. |
+| `location` | `text?` | Free-text location. Max 100 chars. |
+| `github_login` | `text` | GitHub username, lowercased. Also the user's scope. |
+| `avatar_url` | `text?` | GitHub avatar URL, copied from the OAuth payload. |
+| `display_name` | `text?` | Human-readable name from GitHub, editable. |
+| `created_at` | `timestamp` | Profile creation time (mirrors `users.createdAt`). |
+| `updated_at` | `timestamp` | Last profile edit. |
+
+**Constraints**
+- `PRIMARY KEY (user_id)`
+- `UNIQUE (github_login)`
+
+On first sign-in, Better Auth creates the `users` row. A Clawstore post-sign-in hook creates the `profiles` row, seeding `github_login`, `avatar_url`, and `display_name` from the GitHub OAuth response. If the user later edits their profile on `clawstore.dev`, only the `profiles` row is updated — the `users` row is never touched by Clawstore code.
+
 ### `categories`
 
 Seeded list, curated by maintainers. Not a moving part in day-to-day operation.
@@ -173,7 +227,8 @@ Immutability is enforced in application code, not in the database. SQLite has no
 
 - **Publishing a version inserts a `versions` row and only `INSERT`s.** No code path in Clawstore updates the core version fields (`version`, `manifest`, `tarball_r2_key`, `tarball_sha256`, `tarball_size_bytes`, `uploaded_at`, `uploaded_by_user_id`) after insert.
 - **Yanking updates only `yanked_at`, `yanked_by_user_id`, `yanked_reason`** on the version row.
-- **`download_count` updates are best-effort** and tolerate races. They do not participate in any transactional guarantee.
+- **`download_count` updates are best-effort** and tolerate races. They do not participate in any transactional guarantee. The cached `download_count` on `packages` is refreshed alongside version-level counters.
+- **`avg_rating` and `review_count` on `packages`** are recalculated from `reviews` rows on every review write. These are derived aggregates, not source-of-truth — the `reviews` table is authoritative.
 - **Version rows are never deleted** by any code path. A yanked version is still downloadable by operators with a pinned version — this is intentional, matches npm/crates.io semantics, and keeps reproducible installs intact.
 
 To keep accidents unlikely, the Drizzle client wrapper exposes `insertVersion()` and `yankVersion()` as the only two mutation paths for the `versions` table. Direct `.update()` or `.delete()` calls on `versions` are considered bugs and should not pass review.
@@ -237,4 +292,6 @@ At 100-package scale the migration is a half-day of work: re-point Drizzle impor
 
 - [Backend API](backend-api.md) — routes that read and write these tables
 - [Agent Package](agent-package.md) — the `agent.json` manifest whose fields are denormalized into `packages` and persisted in full on `versions`
+- [Auth and Ownership](auth-and-ownership.md) — review permissions and profile enrichment
+- [Trust and Moderation](trust-and-moderation.md) — review moderation policy
 - [Documentation hub](README.md)

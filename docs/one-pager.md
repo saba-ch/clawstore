@@ -105,7 +105,7 @@ Clawstore is *not*:
 - A marketplace for plugins or skills (use ClawHub)
 - A replacement for OpenClaw's runtime (Clawstore only distributes; OpenClaw still runs)
 - A code distribution system (agents are inert content, enforced by validation)
-- A paid store (no payments, no ratings, no install telemetry at launch)
+- A paid store (no payments, no install telemetry at launch)
 
 ## Current status
 
