@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { api } from "../lib/api"
 import { formatCount } from "../lib/utils"
-import { Download, Star, ArrowRight } from "lucide-react"
+import { Download, Star, ArrowRight, Terminal, Upload, RefreshCw, FolderTree } from "lucide-react"
 import { CategoryIcon } from "../components/CategoryIcon"
 import type { Agent, Category } from "@clawstore/sdk"
 
@@ -98,6 +98,120 @@ function HomePage() {
                   <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
                   Open source
                 </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-10">
+        <h2 className="text-lg font-semibold text-white mb-8">How it works</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-neutral-900/50 border border-neutral-800/60 rounded-xl p-6">
+            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
+              <Terminal className="w-4 h-4 text-emerald-400" />
+            </div>
+            <h3 className="text-sm font-semibold text-white mb-2">
+              Install an agent
+            </h3>
+            <div className="bg-neutral-950 rounded-lg p-3 font-mono text-xs mb-3">
+              <span className="text-gray-500 select-none">$ </span>
+              <span className="text-emerald-400">
+                clawstore install @scope/agent
+              </span>
+            </div>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Downloads the package, verifies SHA-256 integrity, and
+              auto-registers it with your local OpenClaw instance. Ready to use
+              immediately.
+            </p>
+          </div>
+
+          <div className="bg-neutral-900/50 border border-neutral-800/60 rounded-xl p-6">
+            <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4">
+              <Upload className="w-4 h-4 text-amber-400" />
+            </div>
+            <h3 className="text-sm font-semibold text-white mb-2">
+              Publish your own
+            </h3>
+            <div className="bg-neutral-950 rounded-lg p-3 font-mono text-xs mb-3">
+              <span className="text-gray-500 select-none">$ </span>
+              <span className="text-amber-400">clawstore init</span>
+              <br />
+              <span className="text-gray-500 select-none">$ </span>
+              <span className="text-amber-400">clawstore publish</span>
+            </div>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Scaffold an agent with identity, capabilities, and personality
+              files. Validate and publish to the registry in seconds.
+            </p>
+          </div>
+
+          <div className="bg-neutral-900/50 border border-neutral-800/60 rounded-xl p-6">
+            <div className="w-9 h-9 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-4">
+              <RefreshCw className="w-4 h-4 text-violet-400" />
+            </div>
+            <h3 className="text-sm font-semibold text-white mb-2">
+              Keep agents updated
+            </h3>
+            <div className="bg-neutral-950 rounded-lg p-3 font-mono text-xs mb-3">
+              <span className="text-gray-500 select-none">$ </span>
+              <span className="text-violet-400">clawstore update</span>
+            </div>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Check for new versions across all installed agents. Semver
+              versioning, integrity checks, and instant rollback if needed.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* What's in a package */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14">
+        <div className="bg-neutral-900/50 border border-neutral-800/60 rounded-xl p-6 sm:p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <FolderTree className="w-4 h-4 text-amber-400" />
+                <h2 className="text-lg font-semibold text-white">
+                  What's in a package?
+                </h2>
+              </div>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                Each agent package contains everything OpenClaw needs to run
+                it — identity, capabilities, personality, and any reference
+                knowledge. Portable, versioned, and ready to deploy.
+              </p>
+            </div>
+            <div className="bg-neutral-950 rounded-lg p-5 font-mono text-sm leading-relaxed">
+              <div className="text-gray-500">my-agent/</div>
+              <div>
+                <span className="text-gray-600">├── </span>
+                <span className="text-amber-400">agent.json</span>
+                <span className="text-gray-600 ml-4">
+                  # name, version, model
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">├── </span>
+                <span className="text-emerald-400">IDENTITY.md</span>
+                <span className="text-gray-600 ml-4"># who it is</span>
+              </div>
+              <div>
+                <span className="text-gray-600">├── </span>
+                <span className="text-emerald-400">AGENTS.md</span>
+                <span className="text-gray-600 ml-4"># what it can do</span>
+              </div>
+              <div>
+                <span className="text-gray-600">├── </span>
+                <span className="text-emerald-400">SOUL.md</span>
+                <span className="text-gray-600 ml-4"># how it talks</span>
+              </div>
+              <div>
+                <span className="text-gray-600">└── </span>
+                <span className="text-violet-400">knowledge/</span>
+                <span className="text-gray-600 ml-4"># reference files</span>
               </div>
             </div>
           </div>
