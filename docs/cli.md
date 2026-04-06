@@ -8,7 +8,7 @@ The CLI imports `@clawstore/schema` and `@clawstore/validator` from the workspac
 
 | Command | Summary |
 |---|---|
-| `clawstore init` | Scaffold an `agent.json` in the current directory. Detects existing workspace files, plugins, and secrets and offers to pre-fill. See [Publish Flow § Step 1](publish-flow.md#step-1-clawstore-init). |
+| `clawstore init` | Scaffold an `agent.json` in the current directory. Detects existing workspace files, plugins, and secrets and offers to pre-fill. Supports non-interactive mode via flags (`--id`, `--name`, `--tagline`, `--category`, `--model`). See [Publish Flow § Step 1](publish-flow.md#step-1-clawstore-init). |
 | `clawstore validate [path]` | Run the shared validator library against a package directory. Pure local, no network. See [Publish Flow § Step 2](publish-flow.md#step-2-clawstore-validate). |
 | `clawstore pack [path]` | Produce a local tarball. Runs `validate` first; refuses to pack on failure. Writes a sidecar hash manifest. |
 | `clawstore preview [path] [--run]` | Install into a scratch workspace under `~/.clawstore/preview/`. `--run` drops into an ephemeral OpenClaw session. See [Publish Flow § Step 4](publish-flow.md#step-4-clawstore-preview). |
