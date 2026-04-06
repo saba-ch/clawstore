@@ -14,7 +14,7 @@ On first sign-in, Better Auth creates:
 - A row in `accounts` — linked to the GitHub provider, holds the GitHub login and provider-side identifiers.
 - A row in `sessions` — active cookie-backed session (web) or the base session used to mint CLI tokens (CLI).
 
-The GitHub login (lowercased) becomes the user's **scope** — the `@scope` part of every package id they publish.
+The GitHub login (lowercased) becomes the user's **scope** — the `@scope` part of every agent id they publish.
 
 ## Sessions (web)
 
@@ -58,7 +58,7 @@ The loopback + nonce pattern is a standard CLI-OAuth dance. It keeps the token o
 | `GET`    | `/v1/tokens`     | session or token | List the caller's active tokens. Token value is never returned — only metadata. |
 | `DELETE` | `/v1/tokens/:id` | session or token | Revoke a token. |
 
-See [Backend API § Token auth (CLI)](backend-api.md#token-auth-cli) for the full contract and [Data Model § `api_tokens`](data-model.md#api_tokens) for the storage shape.
+See [Backend API § Token auth (CLI)](backend-api.md#token-auth-cli) for the full contract.
 
 ## Scope derivation
 
@@ -79,7 +79,7 @@ Ownership is enforced on `POST /v1/publish`.
 
 ### The owner claim
 
-The first successful publish of a package id writes a row to `packages` with `owner_user_id = caller.id`. Ownership is claimed atomically with the first version insert — no separate "register package" step.
+The first successful publish of a agent id writes a row to `packages` with `owner_user_id = caller.id`. Ownership is claimed atomically with the first version insert — no separate "register package" step.
 
 ### Publish authorization rules
 
@@ -87,8 +87,8 @@ On every publish, the backend runs:
 
 1. **Authentication.** Bearer token resolves to a user. Fails with 401 if the token is missing, revoked, or invalid.
 2. **Ownership check.**
-   - If the package id does not exist: caller becomes the owner. Scope on the id must match the caller's scope. A token scoped to `@someone` cannot publish `@acme/anything` — the publish fails with 403 and a clear error.
-   - If the package id exists: caller must equal `packages.owner_user_id`. Any other user fails with 403.
+   - If the agent id does not exist: caller becomes the owner. Scope on the id must match the caller's scope. A token scoped to `@someone` cannot publish `@acme/anything` — the publish fails with 403 and a clear error.
+   - If the agent id exists: caller must equal `agents.owner_user_id`. Any other user fails with 403.
 3. **Version monotonicity.** The new version must be strictly greater than the largest existing version for this id (across all channels). Re-publishing an existing version fails with 409 `version_not_monotonic`. See [Data Model § Immutability rules](data-model.md#immutability-rules).
 
 One owner per id at MVP. Ownership transfer (e.g. handing a package to a different GitHub user) is not supported at MVP; the replacement path is to publish under a new id and yank the old one.
@@ -126,13 +126,12 @@ Public profiles are served at `GET /v1/users/:username` and rendered on `clawsto
 
 Clawstore's authorization logic lives in application code (`apps/api`), not in Better Auth's schema. The auth tables (`users`, `sessions`, `accounts`, `verifications`) carry only identity and session state. Everything about scope, ownership, and tokens is in Clawstore's own tables:
 
-- `packages.owner_user_id` → `users.id`
-- `api_tokens.user_id` → `users.id`
-- `versions.published_by` → `users.id`
+- `agents.owner_user_id` → `users.id`
+- `versions.uploaded_by_user_id` → `users.id`
 
 When Better Auth's schema changes between versions, regenerate with `pnpm --filter api auth:generate`. The Clawstore tables are never regenerated — they are hand-written Drizzle definitions in `apps/api/src/db/schema.ts`.
 
-See [Data Model § Better Auth tables](data-model.md#better-auth-tables) for the generated side and [Data Model § `api_tokens`](data-model.md#api_tokens) for the token table.
+See [Data Model § Better Auth tables](data-model.md#better-auth-tables) for the generated side. Tokens are managed by Better Auth's bearer plugin.
 
 ## Cross-references
 

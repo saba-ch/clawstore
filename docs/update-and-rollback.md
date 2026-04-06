@@ -38,9 +38,9 @@ Full sequence, in order. Any step's failure aborts the update and leaves the pre
 ### Resolve
 
 - Read `~/.clawstore/installs/<agent-id>.json` — current version, install timestamp, workspace path, resolved plugin versions, snapshot ids.
-- `GET /v1/packages/:scope/:name` for the current published manifest. Compare versions.
+- `GET /v1/agents/:scope/:name` for the current published manifest. Compare versions.
 - No newer version: exit 0 with "already up to date."
-- Newer version: fetch `GET /v1/packages/:scope/:name/versions/:new` (detail blob) and `GET /v1/packages/:scope/:name/versions/:new/tarball` (content).
+- Newer version: fetch `GET /v1/agents/:scope/:name/versions/:new` (detail blob) and `GET /v1/agents/:scope/:name/versions/:new/tarball` (content).
 
 ### Show the diff
 

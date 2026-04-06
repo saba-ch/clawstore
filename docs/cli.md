@@ -26,7 +26,7 @@ The CLI imports `@clawstore/schema` and `@clawstore/validator` from the workspac
 | `clawstore update [id]` | Update one agent, or all agents when `id` is omitted. Shows the diff before touching files. See [Update and Rollback](update-and-rollback.md). |
 | `clawstore update check` | Dry-run — print available updates, install nothing. Backed by `POST /v1/updates`. |
 | `clawstore list` | Installed agents with current version and update policy. |
-| `clawstore search <query>` | Hits `GET /v1/packages?q=...`. Terminal-side equivalent of the website search. |
+| `clawstore search <query>` | Hits `GET /v1/agents?q=...`. Terminal-side equivalent of the website search. |
 | `clawstore info <id>` | Package detail in the terminal. Mirrors the website detail page. |
 | `clawstore rollback <id>` | Restore the most recent snapshot. See [Update and Rollback § Rollback](update-and-rollback.md#rollback). |
 | `clawstore doctor [id] [--fix]` | Detect and optionally repair drift between install record and disk. See [Install Flow § `clawstore doctor`](install-flow.md#clawstore-doctor). |

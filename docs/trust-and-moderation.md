@@ -51,7 +51,7 @@ Post-hoc. No human on the hot path. The pipeline:
 2. **Queue.** Reports land in the `reports` table in D1 and show up in the maintainer queue. See [Data Model § `reports`](data-model.md#reports).
 3. **Triage.** Maintainers review the report, fetch the offending version, and decide: dismiss, yank the version, delist the package, or escalate.
 4. **Action.**
-   - **Yank.** `POST /v1/packages/:scope/:name/versions/:version/yank` — hides from resolution but keeps the row for audit. Reversible by a maintainer via `unyank` (owners cannot unyank their own yanked versions, to avoid accidental re-exposure of bad content).
+   - **Yank.** `POST /v1/agents/:scope/:name/versions/:version/yank` — hides from resolution but keeps the row for audit. Reversible by a maintainer via `unyank` (owners cannot unyank their own yanked versions, to avoid accidental re-exposure of bad content).
    - **Delist the whole package.** Hides every version of a package. Same audit-trail guarantee as yank.
    - **Escalate.** Out-of-band process, e.g. for GitHub TOS violations that need the author's OAuth account revoked — not something the CLI or web can do directly.
 5. **Close the report.** `POST /v1/reports/:id/resolve` with the disposition. The queue stays clean.
@@ -61,18 +61,18 @@ Post-hoc. No human on the hot path. The pipeline:
 Reviews follow the same reactive moderation model as packages. There is no pre-publish review gate.
 
 **What's enforced:**
-- One review per user per package (database constraint).
-- Package owners cannot review their own packages (application-level 403).
+- One review per user per agent (database constraint).
+- Agent owners cannot review their own agents (application-level 403).
 - Rate-limited to 30 review writes per hour per user.
 - Review text is capped (title: 120 chars, body: 2000 chars).
 
 **What's not enforced (MVP):**
 - No automated spam detection or sentiment analysis on review text.
-- No "verified install" badge — Clawstore does not track whether the reviewer actually installed the package, because install telemetry is client-side only.
+- No "verified install" badge — Clawstore does not track whether the reviewer actually installed the agent, because install telemetry is client-side only.
 
 **Moderation flow for reviews:**
 - Users can report a review the same way they report a package — via the report button.
-- Maintainers can delete any review via `DELETE /v1/packages/:scope/:name/reviews/:id`. The review row is hard-deleted, and the package's `avg_rating` and `review_count` are recalculated.
+- Maintainers can delete any review via `DELETE /v1/agents/:scope/:name/reviews/:id`. The review row is hard-deleted, and the agent's `avg_rating` and `review_count` are recalculated.
 - If review abuse becomes systematic (coordinated downvoting, spam rings), the v2 path is to add review-specific flags to the `reports` table and automated detection. Not built at MVP.
 
 ### Channels

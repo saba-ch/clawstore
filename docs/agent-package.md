@@ -89,7 +89,7 @@ The only hard structural requirement is that `agent.json` exists at the package 
 
   "store": {
     "icon": "store/icon.png",
-    "screenshots": ["store/screenshots/*.png"]
+    "screenshots": ["store/screenshots/chat.png", "store/screenshots/daily-log.png"]
   },
 
   "openclaw": {
@@ -128,8 +128,8 @@ The only hard structural requirement is that `agent.json` exists at the package 
 | `dependencies.skills` | object[] | Skill slugs resolved through `openclaw skills install` at install time. |
 | `dependencies.providers` | object | `{ any: [...] }` declares acceptable runtime model providers. |
 | `setup.secrets` | object[] | Required secrets prompted at install time. See [Secrets](#secrets). |
-| `store.icon` | string? | Path to the package icon within the package tree. |
-| `store.screenshots` | string[]? | Glob or list of screenshot paths. |
+| `store.icon` | string? | Path to the icon file relative to the package root. Uploaded separately from the tarball at publish time. |
+| `store.screenshots` | string[]? | Paths to screenshot files relative to the package root. Uploaded separately from the tarball at publish time. |
 | `openclaw.entrypoints` | object | Maps package-relative file paths to canonical OpenClaw workspace filenames. |
 | `openclaw.templates` | object | Maps package-relative template files to workspace filenames that must be written exactly once. |
 

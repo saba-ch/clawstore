@@ -24,16 +24,16 @@ When Better Auth's schema changes between versions, regenerate: `pnpm --filter a
 
 ## Clawstore tables
 
-### `packages`
+### `agents`
 
-One row per claimed package ID. A row exists from the moment a user publishes their first version under a given `(scope, name)` pair, and persists forever after (even if all versions are yanked).
+One row per claimed agent ID. A row exists from the moment a user publishes their first version under a given `(scope, name)` pair, and persists forever after (even if all versions are yanked).
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | `text` (UUID) | Primary key. |
 | `scope` | `text` | Lowercased GitHub username of the owner. Together with `name` forms the scoped ID `@scope/name`. |
-| `name` | `text` | Package name within the scope. Kebab-case, 2–64 chars. |
-| `owner_user_id` | `text` (fk → `users.id`) | The user who first published this package. One owner per package at MVP. |
+| `name` | `text` | Agent name within the scope. Kebab-case, 2–64 chars. |
+| `owner_user_id` | `text` (fk → `users.id`) | The user who first published this agent. One owner per agent at MVP. |
 | `latest_version_id` | `text` (fk → `versions.id`, nullable) | Pointer to the current `latest` version. NULL before the first version is published. Advances on publish unless the new version is a pre-release. |
 | `category` | `text` | Category slug from the curated `categories` table. |
 | `description` | `text` | Long-form description (copied from the latest published manifest for indexing convenience). |
@@ -57,17 +57,17 @@ One row per claimed package ID. A row exists from the moment a user publishes th
 
 The denormalized `description`, `tagline`, `display_name` fields are snapshots from the most recently published version's manifest. They are refreshed on publish and on metadata refresh. This avoids a join to `versions` for every search query.
 
-The denormalized `download_count`, `avg_rating`, and `review_count` fields are aggregates cached on the package row for search sorting and listing performance. `download_count` is refreshed on every tarball download (best-effort). `avg_rating` and `review_count` are refreshed on every review insert, update, or delete.
+The denormalized `download_count`, `avg_rating`, and `review_count` fields are aggregates cached on the agent row for search sorting and listing performance. `download_count` is refreshed on every tarball download (best-effort). `avg_rating` and `review_count` are refreshed on every review insert, update, or delete.
 
 ### `versions`
 
-Immutable once written. Every published version of every package is a row here. Yanking flips `yanked_at` but never deletes or mutates other fields.
+Immutable once written. Every published version of every agent is a row here. Yanking flips `yanked_at` but never deletes or mutates other fields.
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | `text` (UUID) | Primary key. |
-| `package_id` | `text` (fk → `packages.id`) | The package this version belongs to. |
-| `version` | `text` | SemVer string. Must be strictly greater than any existing version row for the same `package_id`. |
+| `agent_id` | `text` (fk → `agents.id`) | The agent this version belongs to. |
+| `version` | `text` | SemVer string. Must be strictly greater than any existing version row for the same `agent_id`. |
 | `channel` | `text` enum | `community` \| `official` \| `beta`. Enforced in application code; D1 has no native enum. |
 | `manifest` | `text` (JSON) | The full `agent.json` as uploaded. Stored for audit, rendering, and re-serving via the API. |
 | `tarball_r2_key` | `text` | R2 object key for the tarball. Convention: `tarballs/<scope>/<name>/<version>.tgz`. |
@@ -81,35 +81,34 @@ Immutable once written. Every published version of every package is a row here. 
 | `yanked_reason` | `text?` | Free-text reason supplied on yank. |
 
 **Constraints**
-- `UNIQUE (package_id, version)`
-- Index on `(package_id, uploaded_at DESC)` for version history queries
+- `UNIQUE (agent_id, version)`
+- Index on `(agent_id, uploaded_at DESC)` for version history queries
 - Index on `yanked_at` (for filtering resolvable versions)
 
-### `package_tags`
+### `agent_tags`
 
-Many-to-many between packages and free-form tags. Keeps tag filtering cheap without relying on JSON column queries.
+Many-to-many between agents and free-form tags. Keeps tag filtering cheap without relying on JSON column queries.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `package_id` | `text` (fk → `packages.id`) | |
+| `agent_id` | `text` (fk → `agents.id`) | |
 | `tag` | `text` | Lowercased, kebab-case. |
 
 **Constraints**
-- `PRIMARY KEY (package_id, tag)`
-- Index on `tag` (for "all packages with tag X" queries)
+- `PRIMARY KEY (agent_id, tag)`
+- Index on `tag` (for "all agents with tag X" queries)
 
 Tags are refreshed on publish from the manifest's `tags` array: the previous set is replaced atomically.
 
 ### `version_assets`
 
-One row per extracted asset (icon, screenshot, etc.) within a published version. Populated during publish extraction.
+One row per asset (icon, screenshot, etc.) within a published version. Assets are uploaded separately as part of the publish flow, not extracted from the tarball.
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | `text` (UUID) | Primary key. |
 | `version_id` | `text` (fk → `versions.id`) | |
 | `kind` | `text` enum | `icon` \| `screenshot` \| `other`. |
-| `path` | `text` | Original path inside the tarball (e.g., `store/screenshots/chat.png`). |
 | `r2_key` | `text` | R2 object key. Convention: `assets/<scope>/<name>/<version>/<sanitized-path>`. |
 | `content_type` | `text` | Sniffed MIME type. |
 | `size_bytes` | `integer` | |
@@ -119,24 +118,6 @@ One row per extracted asset (icon, screenshot, etc.) within a published version.
 **Constraints**
 - Index on `(version_id, kind)` for detail-page queries
 
-### `api_tokens`
-
-CLI-facing API tokens. Created via `clawstore login`, revocable via `DELETE /v1/tokens/:id`. The raw token value is never stored — only its SHA-256 hash.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `text` (UUID) | Primary key. |
-| `user_id` | `text` (fk → `users.id`) | |
-| `name` | `text` | Human label (e.g., `"laptop"`, `"ci-bot"`). |
-| `token_hash` | `text` | SHA-256 of the token value. `UNIQUE`. |
-| `last_used_at` | `timestamp?` | Updated on every authenticated request. Best-effort. |
-| `created_at` | `timestamp` | |
-| `revoked_at` | `timestamp?` | If set, the token is rejected on every request. |
-
-**Constraints**
-- `UNIQUE (token_hash)`
-- Index on `user_id`
-
 ### `reports`
 
 Moderation queue. Filled by the public `POST /v1/reports` endpoint, drained by maintainers through `GET /v1/reports` + `POST /v1/reports/:id/resolve`.
@@ -144,8 +125,8 @@ Moderation queue. Filled by the public `POST /v1/reports` endpoint, drained by m
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | `text` (UUID) | Primary key. |
-| `package_id` | `text` (fk → `packages.id`) | |
-| `version_id` | `text?` (fk → `versions.id`) | Nullable — report may target the whole package. |
+| `agent_id` | `text` (fk → `agents.id`) | |
+| `version_id` | `text?` (fk → `versions.id`) | Nullable — report may target the whole agent. |
 | `reporter_user_id` | `text?` (fk → `users.id`) | Nullable — anonymous reports are allowed. |
 | `reporter_ip_hash` | `text` | SHA-256 of (IP + salt). Used for rate limiting and abuse detection, not for identification. |
 | `reason` | `text` enum | `malicious` \| `trademark` \| `spam` \| `inappropriate` \| `other`. |
@@ -158,17 +139,17 @@ Moderation queue. Filled by the public `POST /v1/reports` endpoint, drained by m
 
 **Constraints**
 - Index on `(status, created_at)` for "open reports, oldest first"
-- Index on `package_id`
+- Index on `agent_id`
 - Index on `reporter_ip_hash` (for rate limiting)
 
 ### `reviews`
 
-One row per user per package. An authenticated user may leave one review for a package they do not own. Reviews carry a 1–5 star rating and an optional text body.
+One row per user per agent. An authenticated user may leave one review for an agent they do not own. Reviews carry a 1–5 star rating and an optional text body.
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | `text` (UUID) | Primary key. |
-| `package_id` | `text` (fk → `packages.id`) | The package being reviewed. |
+| `agent_id` | `text` (fk → `agents.id`) | The agent being reviewed. |
 | `reviewer_user_id` | `text` (fk → `users.id`) | The user who wrote the review. |
 | `rating` | `integer` | Star rating, 1–5. Enforced in application code. |
 | `title` | `text?` | Optional short summary. Max 120 chars. |
@@ -177,14 +158,14 @@ One row per user per package. An authenticated user may leave one review for a p
 | `updated_at` | `timestamp` | Last edit time. Equals `created_at` if never edited. |
 
 **Constraints**
-- `UNIQUE (package_id, reviewer_user_id)` — one review per user per package
-- Index on `package_id` (for listing reviews on a package detail page)
+- `UNIQUE (agent_id, reviewer_user_id)` — one review per user per agent
+- Index on `agent_id` (for listing reviews on an agent detail page)
 - Index on `reviewer_user_id` (for user profile "my reviews" queries)
-- Index on `(package_id, created_at DESC)` (for paginated review feeds)
+- Index on `(agent_id, created_at DESC)` (for paginated review feeds)
 
-On insert, update, or delete, the API recalculates `packages.avg_rating` and `packages.review_count` from the surviving rows. This is a simple `AVG(rating)` / `COUNT(*)` over the `reviews` table filtered by `package_id`. At MVP scale this is fast enough inline; at scale it moves to a background job.
+On insert, update, or delete, the API recalculates `agents.avg_rating` and `agents.review_count` from the surviving rows. This is a simple `AVG(rating)` / `COUNT(*)` over the `reviews` table filtered by `agent_id`. At MVP scale this is fast enough inline; at scale it moves to a background job.
 
-Authors cannot review their own packages — the backend rejects with 403 if `reviewer_user_id === packages.owner_user_id`.
+Authors cannot review their own agents — the backend rejects with 403 if `reviewer_user_id === agents.owner_user_id`.
 
 ### `profiles`
 
@@ -227,8 +208,8 @@ Immutability is enforced in application code, not in the database. SQLite has no
 
 - **Publishing a version inserts a `versions` row and only `INSERT`s.** No code path in Clawstore updates the core version fields (`version`, `manifest`, `tarball_r2_key`, `tarball_sha256`, `tarball_size_bytes`, `uploaded_at`, `uploaded_by_user_id`) after insert.
 - **Yanking updates only `yanked_at`, `yanked_by_user_id`, `yanked_reason`** on the version row.
-- **`download_count` updates are best-effort** and tolerate races. They do not participate in any transactional guarantee. The cached `download_count` on `packages` is refreshed alongside version-level counters.
-- **`avg_rating` and `review_count` on `packages`** are recalculated from `reviews` rows on every review write. These are derived aggregates, not source-of-truth — the `reviews` table is authoritative.
+- **`download_count` updates are best-effort** and tolerate races. They do not participate in any transactional guarantee. The cached `download_count` on `agents` is refreshed alongside version-level counters.
+- **`avg_rating` and `review_count` on `agents`** are recalculated from `reviews` rows on every review write. These are derived aggregates, not source-of-truth — the `reviews` table is authoritative.
 - **Version rows are never deleted** by any code path. A yanked version is still downloadable by operators with a pinned version — this is intentional, matches npm/crates.io semantics, and keeps reproducible installs intact.
 
 To keep accidents unlikely, the Drizzle client wrapper exposes `insertVersion()` and `yankVersion()` as the only two mutation paths for the `versions` table. Direct `.update()` or `.delete()` calls on `versions` are considered bugs and should not pass review.
@@ -243,35 +224,35 @@ Channels are a `text` column on `versions` with application-level validation.
 | `official` | Authenticated user with the `official` role (curated allowlist) | Yes | Yes |
 | `beta` | Any authenticated user — requires a pre-release suffix in the `version` string | Optional filter | No — `latest` never advances to a beta |
 
-A package may have versions in multiple channels. The `latest` pointer on `packages` always refers to the most recent stable (non-beta) version, regardless of channel.
+An agent may have versions in multiple channels. The `latest` pointer on `agents` always refers to the most recent stable (non-beta) version, regardless of channel.
 
-The `private` channel is deferred. When added, it will sit on the `versions` row with a visibility ACL on the `packages` row.
+The `private` channel is deferred. When added, it will sit on the `versions` row with a visibility ACL on the `agents` row.
 
 ## Search strategy
 
-MVP search is deliberately boring: Drizzle query builder `LIKE` queries over denormalized text columns on `packages`, plus indexed tag joins through `package_tags`.
+MVP search is deliberately boring: Drizzle query builder `LIKE` queries over denormalized text columns on `agents`, plus indexed tag joins through `agent_tags`.
 
 ### Why LIKE, not FTS5
 
 - D1 supports SQLite FTS5 virtual tables. They would give better ranking and relevance.
 - FTS5 is a SQLite feature. Postgres FTS is structurally different. Writing against FTS5 means the D1-to-Postgres migration has to port every FTS query by hand, not by swapping a dialect import.
-- At MVP scale (10–1000 packages), `LIKE` on indexed columns is fast enough that users will not notice the difference.
+- At MVP scale (10–1000 agents), `LIKE` on indexed columns is fast enough that users will not notice the difference.
 - Upgrading to Postgres FTS + trigram at migration time is **additive** — it improves search quality — and costs one focused refactor instead of a bespoke port.
 
 ### Which columns, which indexes
 
 Search queries are `LIKE '%q%'` against:
-- `packages.display_name`
-- `packages.tagline`
-- `packages.scope`
-- `packages.name`
+- `agents.display_name`
+- `agents.tagline`
+- `agents.scope`
+- `agents.name`
 
 Filters join:
-- `package_tags.tag` (exact match)
-- `packages.category` (exact match)
-- `packages.channel` of the `latest_version` (exact match, by joining `versions`)
+- `agent_tags.tag` (exact match)
+- `agents.category` (exact match)
+- `agents.channel` of the `latest_version` (exact match, by joining `versions`)
 
-Indexes on every `LIKE`-ed column. At 10k packages this still returns results in single-digit milliseconds on D1.
+Indexes on every `LIKE`-ed column. At 10k agents this still returns results in single-digit milliseconds on D1.
 
 ## D1 → Postgres migration conventions
 
@@ -286,12 +267,12 @@ These are rules the schema file must follow to keep the migration cost low. Viol
 7. **Primary keys are TEXT UUIDs**, not integers. Portable, human-greppable in logs, collision-proof across environments.
 8. **Better Auth's `provider` string flips from `"sqlite"` to `"pg"` at migration time** — one line in the auth config. See the `better-auth-cloudflare` integration in `apps/api/src/auth.ts`.
 
-At 100-package scale the migration is a half-day of work: re-point Drizzle imports from `drizzle-orm/sqlite-core` to `drizzle-orm/pg-core`, regenerate migrations, dump D1 via `wrangler d1 export`, massage into Postgres `COPY` statements, import, swap the binding in `sst.config.ts`. At 10k scale it is roughly a week, mostly data validation.
+At 100-agent scale the migration is a half-day of work: re-point Drizzle imports from `drizzle-orm/sqlite-core` to `drizzle-orm/pg-core`, regenerate migrations, dump D1 via `wrangler d1 export`, massage into Postgres `COPY` statements, import, swap the binding in `sst.config.ts`. At 10k-agent scale it is roughly a week, mostly data validation.
 
 ## Cross-references
 
 - [Backend API](backend-api.md) — routes that read and write these tables
-- [Agent Package](agent-package.md) — the `agent.json` manifest whose fields are denormalized into `packages` and persisted in full on `versions`
+- [Agent Package](agent-package.md) — the `agent.json` manifest whose fields are denormalized into `agents` and persisted in full on `versions`
 - [Auth and Ownership](auth-and-ownership.md) — review permissions and profile enrichment
 - [Trust and Moderation](trust-and-moderation.md) — review moderation policy
 - [Documentation hub](README.md)

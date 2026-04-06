@@ -2,7 +2,7 @@
 
 The author's experience, from "I have a working agent on my machine" to "my agent is live on the store." Six CLI commands, one HTTPS upload, no PR reviews, no deploy pipeline.
 
-The flow is designed so that the local validator the author runs (`clawstore validate`) and the server-side validator the backend runs (`POST /v1/publish`) are the same library. If it's clean locally, it's accepted remotely — modulo the server-only checks that the CLI cannot know without contacting the backend (authentication, ownership, version monotonicity).
+The flow is designed so that the local validator the author runs (`clawstore validate`) and the server-side validator the backend runs (`POST /v1/agents/publish`) are the same library. If it's clean locally, it's accepted remotely — modulo the server-only checks that the CLI cannot know without contacting the backend (authentication, ownership, version monotonicity).
 
 ## Prerequisite: a working agent
 
@@ -32,7 +32,7 @@ Outcome: the workspace is now *also* a Clawstore package. The author keeps using
 $ clawstore validate
 ```
 
-Pure local, no network. Runs the shared `packages/validator` library — the same code that runs server-side on `POST /v1/publish`. Reports:
+Pure local, no network. Runs the shared `packages/validator` library — the same code that runs server-side on `POST /v1/agents/publish`. Reports:
 
 - Schema errors in `agent.json`.
 - Entrypoint resolution errors (files named in `openclaw.entrypoints` or `openclaw.templates` that do not exist in the package tree).
@@ -90,7 +90,7 @@ $ clawstore publish
 Client side:
 
 1. Run `validate` + `pack` under the hood. Refuse to publish on validation failure.
-2. `POST /v1/publish` with the tarball as the `tarball` file part and a redundant `metadata` JSON part (lets the server reject obviously broken uploads before reading the tarball).
+2. `POST /v1/agents/publish` with the tarball as the `tarball` file part and a redundant `metadata` JSON part (lets the server reject obviously broken uploads before reading the tarball).
 3. Present the backend's structured response to the user: live URLs for the detail page, the tarball, and each asset.
 
 Server side (the publish endpoint runs, in order):
@@ -102,7 +102,7 @@ Server side (the publish endpoint runs, in order):
 5. **Executable scan + secret scan** — hard fail on any finding.
 6. **Plugin reachability** — for each `dependencies.plugins[]`, confirm the spec resolves (ClawHub entry exists, npm package exists, git URL responds).
 7. **Extract assets** — stream the tarball, write the full `.tgz` to `tarballs/:scope/:name/:version.tgz` in R2, extract icon and screenshots to `assets/:scope/:name/:version/...` with immutable cache headers.
-8. **Persist** — insert the version row in D1, update the package's `latest_version_id` pointer (unless this is a pre-release), insert the owner claim if this is the package's first publish.
+8. **Persist** — insert the version row in D1, update the agent's `latest_version_id` pointer (unless this is a pre-release), insert the owner claim if this is the agent's first publish.
 9. **Return** — canonical URLs for the detail page, the tarball, and every asset.
 
 The agent is live the moment the endpoint returns. There is no merge step, no deploy pipeline, no cache invalidation ceremony.

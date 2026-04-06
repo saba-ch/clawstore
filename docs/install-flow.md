@@ -13,8 +13,8 @@ $ clawstore install @someone/calorie-coach@0.3.1
 
 The flow, in order:
 
-1. **Resolve the version.** `GET /v1/packages/:scope/:name` returns the package with its `latest` version manifest. If the operator pinned a version, `GET /v1/packages/:scope/:name/versions/:version` is used instead. Yanked versions are only returned when explicitly pinned.
-2. **Download the tarball.** `GET /v1/packages/:scope/:name/versions/:version/tarball`. Content-addressed URL with long-TTL immutable caching — the CLI verifies the content hash on arrival.
+1. **Resolve the version.** `GET /v1/agents/:scope/:name` returns the package with its `latest` version manifest. If the operator pinned a version, `GET /v1/agents/:scope/:name/versions/:version` is used instead. Yanked versions are only returned when explicitly pinned.
+2. **Download the tarball.** `GET /v1/agents/:scope/:name/versions/:version/tarball`. Content-addressed URL with long-TTL immutable caching — the CLI verifies the content hash on arrival.
 3. **Validate locally.** Run `packages/validator` against the downloaded tarball. This should always pass (the backend already validated at publish time), but re-running locally catches truncated downloads and tampered caches.
 4. **Show the install plan.** Exactly which files, plugins, skills, and secrets are about to land on the system:
 

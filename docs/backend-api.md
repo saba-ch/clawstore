@@ -1,6 +1,6 @@
 # Backend API
 
-The Clawstore backend is a single Hono app deployed as a Cloudflare Worker at `api.clawstore.dev`. It owns all read and write paths for the registry: authentication, publishing, search, package metadata, tarball serving, yank, reports. The CLI and the web frontend both consume it — the web Worker through a Cloudflare service binding, the CLI over public HTTPS.
+The Clawstore backend is a single Hono app deployed as a Cloudflare Worker at `api.clawstore.dev`. It owns all read and write paths for the registry: authentication, publishing, search, agent metadata, tarball serving, yank, reports. The CLI and the web frontend both consume it — the web Worker through a Cloudflare service binding, the CLI over public HTTPS.
 
 There is no second backend. The discovery website does not talk to D1 directly; it goes through the same API as `clawstore install`.
 
@@ -51,15 +51,9 @@ Refer to Better Auth's documentation for the full endpoint surface. Clawstore re
 
 ### Token auth (CLI)
 
-The CLI does not hold a session cookie — it holds an **API token**. Tokens are created from an authenticated session, scoped to the issuing user, and presented via `Authorization: Bearer <token>` on every request.
+The CLI does not hold a session cookie — it holds an **API token**. Token creation, listing, and revocation are handled by Better Auth's **bearer** plugin via the `/api/auth/token` endpoints. Tokens are scoped to the issuing user and presented via `Authorization: Bearer <token>` on every request. Clawstore adds no custom token routes.
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `POST`   | `/v1/tokens`     | session or token | Create a new API token. Body: `{ name, scopes? }`. Returns the token value exactly once. |
-| `GET`    | `/v1/tokens`     | session or token | List the caller's active tokens. Token value is never returned — only metadata. |
-| `DELETE` | `/v1/tokens/:id` | session or token | Revoke a token. |
-
-`clawstore login` opens a browser to the web frontend, the operator approves, the web frontend calls `POST /v1/tokens` on their behalf, and the token is handed back to the CLI via a local-loopback callback. The token is stored in the OS keychain (or `~/.clawstore/auth.json` with `0600` permissions as a fallback).
+`clawstore login` opens a browser to the web frontend, the operator approves, the web frontend calls the Better Auth bearer endpoint on their behalf, and the token is handed back to the CLI via a local-loopback callback. The token is stored in the OS keychain (or `~/.clawstore/auth.json` with `0600` permissions as a fallback).
 
 ## API versioning
 
@@ -80,7 +74,7 @@ Better Auth routes live under `/api/auth/*` and are versioned independently by t
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/v1/me` | required | Return the authenticated user's identity and profile: `{ id, githubLogin, scope, createdAt, ownedPackageCount, profile: { bio, website, location, avatarUrl, displayName } }`. |
+| `GET` | `/v1/me` | required | Return the authenticated user's identity and profile: `{ id, githubLogin, scope, createdAt, ownedAgentCount, profile: { bio, website, location, avatarUrl, displayName } }`. |
 
 ### User profiles
 
@@ -88,21 +82,21 @@ Public profiles for any user. Profile data is seeded from GitHub on first sign-i
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET`  | `/v1/users/:username`          | none     | Public profile: `{ githubLogin, displayName, avatarUrl, bio, website, location, createdAt, packages: [{ scope, name, tagline, avgRating, downloadCount }] }`. |
+| `GET`  | `/v1/users/:username`          | none     | Public profile: `{ githubLogin, displayName, avatarUrl, bio, website, location, createdAt, agents: [{ scope, name, tagline, avgRating, downloadCount }] }`. |
 | `PUT`  | `/v1/users/:username/profile`  | required | Update the caller's own profile. Body: `{ bio?, website?, location?, displayName? }`. Returns 403 if `:username` does not match the caller's scope. |
 
-### Package listing and search
+### Agent listing and search
 
-`:scope` in the URL is the publisher's GitHub username (no `@` — the client adds it back when displaying). `:name` is the package name within the scope.
+`:scope` in the URL is the publisher's GitHub username (no `@` — the client adds it back when displaying). `:name` is the agent name within the scope.
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/v1/packages`                              | none | List or search packages. See query params below. |
-| `GET` | `/v1/packages/:scope/:name`                 | none | Package detail including the current `latest` version manifest. |
-| `GET` | `/v1/packages/:scope/:name/versions`        | none | Version history for a package (paginated). |
-| `GET` | `/v1/packages/:scope/:name/versions/:version` | none | A specific version's metadata and full `agent.json`. |
+| `GET` | `/v1/agents`                              | none | List or search agents. See query params below. |
+| `GET` | `/v1/agents/:scope/:name`                 | none | Agent detail including the current `latest` version manifest. |
+| `GET` | `/v1/agents/:scope/:name/versions`        | none | Version history for an agent (paginated). |
+| `GET` | `/v1/agents/:scope/:name/versions/:version` | none | A specific version's metadata and full `agent.json`. |
 
-Query params for `GET /v1/packages`:
+Query params for `GET /v1/agents`:
 
 | Param | Type | Description |
 |-------|------|-------------|
@@ -117,12 +111,12 @@ Query params for `GET /v1/packages`:
 
 MVP search is `LIKE` with indexes on `name`, `tagline`, and `tags`. See [Data Model](data-model.md) for the indexing strategy and the reason FTS5 is deliberately off the table.
 
-### Package download
+### Agent download
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/v1/packages/:scope/:name/versions/:version/tarball`             | none | Download the tarball. Content-addressed URL; `Cache-Control: public, max-age=31536000, immutable`. |
-| `GET` | `/v1/packages/:scope/:name/versions/:version/assets/:path`        | none | Serve an extracted asset (icon, screenshot). Same cache headers. |
+| `GET` | `/v1/agents/:scope/:name/versions/:version/tarball`             | none | Download the tarball. Content-addressed URL; `Cache-Control: public, max-age=31536000, immutable`. |
+| `GET` | `/v1/agents/:scope/:name/versions/:version/assets/:path`        | none | Serve an extracted asset (icon, screenshot). Same cache headers. |
 
 Downloads increment a counter on the version row. Counters are bucketed per day and not blocked on — the request returns whether or not the counter write succeeds.
 
@@ -130,9 +124,9 @@ Downloads increment a counter on the version row. Counters are bucketed per day 
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `POST` | `/v1/publish` | token | Authenticated tarball upload. Request body is `multipart/form-data` with one file part (`tarball`, the `.tgz`) and one JSON part (`metadata`, redundant manifest for quick rejection). Server validates, extracts assets, writes the version row, returns the live URL. |
-| `POST` | `/v1/packages/:scope/:name/versions/:version/yank` | token | Yank a published version. Owner-only. Body: `{ reason? }`. Idempotent — yanking an already-yanked version is a no-op. |
-| `POST` | `/v1/packages/:scope/:name/versions/:version/unyank` | token | Reverse a yank. Maintainer-only (owners cannot unyank their own yanked versions — avoids accidental re-exposure of bad content). |
+| `POST` | `/v1/agents/publish` | token | Authenticated tarball upload. Request body is `multipart/form-data` with one file part (`tarball`, the `.tgz`) and one JSON part (`metadata`, redundant manifest for quick rejection). Server validates, extracts assets, writes the version row, returns the live URL. |
+| `POST` | `/v1/agents/:scope/:name/versions/:version/yank` | token | Yank a published version. Owner-only. Body: `{ reason? }`. Idempotent — yanking an already-yanked version is a no-op. |
+| `POST` | `/v1/agents/:scope/:name/versions/:version/unyank` | token | Reverse a yank. Maintainer-only (owners cannot unyank their own yanked versions — avoids accidental re-exposure of bad content). |
 
 The publish endpoint runs, in order:
 
@@ -143,7 +137,7 @@ The publish endpoint runs, in order:
 5. **Executable scan + secret scan** — hard fail on any finding.
 6. **Plugin reachability** — for each `dependencies.plugins[]`, confirm the spec resolves (ClawHub entry exists, npm package exists, git URL responds).
 7. **Extract assets** — stream the tarball, write the full `.tgz` to `tarballs/:scope/:name/:version.tgz` in R2, extract icon and screenshots to `assets/:scope/:name/:version/...` with immutable cache headers.
-8. **Persist** — write the version row to D1, update the package's `latest` pointer (unless this is a pre-release), insert any new owner claim.
+8. **Persist** — write the version row to D1, update the agent's `latest` pointer (unless this is a pre-release), insert any new owner claim.
 9. **Return** — response body includes the canonical URLs for the tarball, each asset, and the version detail endpoint.
 
 Failures at any step abort the publish. Partial writes are cleaned up — the R2 uploads are idempotent and the D1 insert is the last step.
@@ -160,7 +154,7 @@ This is a single round-trip for the common case where an operator has 10 install
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `POST` | `/v1/reports` | none (optional auth) | File a report against a package or version. Body: `{ packageId, versionId?, reason, details }`. Rate-limited hard. |
+| `POST` | `/v1/reports` | none (optional auth) | File a report against an agent or version. Body: `{ agentId, versionId?, reason, details }`. Rate-limited hard. |
 | `GET`  | `/v1/reports` | maintainer | List pending reports. Maintainer-only. |
 | `POST` | `/v1/reports/:id/resolve` | maintainer | Resolve a report. |
 
@@ -168,18 +162,18 @@ Reports land in the database for maintainer triage. There is no pre-publish huma
 
 ### Reviews
 
-Authenticated users can leave one review per package. Authors cannot review their own packages. Reviews carry a 1–5 star rating and optional text.
+Authenticated users can leave one review per agent. Authors cannot review their own agents. Reviews carry a 1–5 star rating and optional text.
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET`    | `/v1/packages/:scope/:name/reviews`     | none     | List reviews for a package. Paginated, sorted by `created_at DESC`. Response includes `avgRating` and `reviewCount` in metadata. |
-| `POST`   | `/v1/packages/:scope/:name/reviews`     | required | Create a review. Body: `{ rating, title?, body? }`. Returns 409 if the user already reviewed this package. Returns 403 if the user is the package owner. |
-| `PUT`    | `/v1/packages/:scope/:name/reviews/:id` | required | Update the caller's own review. Body: `{ rating?, title?, body? }`. Returns 403 if the review belongs to another user. |
-| `DELETE` | `/v1/packages/:scope/:name/reviews/:id` | required | Delete the caller's own review, or any review if the caller is a maintainer. |
+| `GET`    | `/v1/agents/:scope/:name/reviews`     | none     | List reviews for an agent. Paginated, sorted by `created_at DESC`. Response includes `avgRating` and `reviewCount` in metadata. |
+| `POST`   | `/v1/agents/:scope/:name/reviews`     | required | Create a review. Body: `{ rating, title?, body? }`. Returns 409 if the user already reviewed this agent. Returns 403 if the user is the agent owner. |
+| `PUT`    | `/v1/agents/:scope/:name/reviews/:id` | required | Update the caller's own review. Body: `{ rating?, title?, body? }`. Returns 403 if the review belongs to another user. |
+| `DELETE` | `/v1/agents/:scope/:name/reviews/:id` | required | Delete the caller's own review, or any review if the caller is a maintainer. |
 
-On every write operation (create, update, delete), the API recalculates `packages.avg_rating` and `packages.review_count` inline.
+On every write operation (create, update, delete), the API recalculates `agents.avg_rating` and `agents.review_count` inline.
 
-Package detail responses (`GET /v1/packages/:scope/:name`) include `avgRating`, `reviewCount`, and `downloadCount` alongside existing fields.
+Agent detail responses (`GET /v1/agents/:scope/:name`) include `avgRating`, `reviewCount`, and `downloadCount` alongside existing fields.
 
 ## Response shapes
 
@@ -217,10 +211,9 @@ Rate limits are enforced via Better Auth's KV-backed rate limiter for auth endpo
 | Endpoint class | Limit | Window |
 |----------------|-------|--------|
 | `/api/auth/*`                     | 100 | 1 minute |
-| `POST /v1/publish`                | 20  | 1 hour (per user) |
+| `POST /v1/agents/publish`         | 20  | 1 hour (per user) |
 | `POST /v1/reports`                | 10  | 1 hour (per IP) |
 | `POST/PUT/DELETE /v1/.../reviews` | 30  | 1 hour (per user) |
-| `POST /v1/tokens`                 | 10  | 1 hour (per user) |
 | All other `GET /v1/*` (read)      | 600 | 1 minute |
 | All other `POST /v1/*` (write)    | 60  | 1 minute |
 

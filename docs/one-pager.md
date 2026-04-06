@@ -109,7 +109,7 @@ Clawstore is *not*:
 
 ## Current status
 
-Pre-code. Architecture, stack, and data model are locked. Implementation begins from the [Documentation hub](README.md).
+Implementation through Phase 8 (web frontend) is complete. Schema + validator, API routes, SDK, CLI, and web discovery site are built. See the [Documentation hub](README.md).
 
 Relationship with the sibling ecosystem:
 
