@@ -128,24 +128,6 @@ export const versionAssets = sqliteTable(
   (t) => [index("version_assets_version_kind_idx").on(t.versionId, t.kind)]
 );
 
-export const apiTokens = sqliteTable(
-  "api_tokens",
-  {
-    id: text("id").primaryKey(), // UUID
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id),
-    name: text("name").notNull(),
-    tokenHash: text("token_hash").notNull().unique(),
-    lastUsedAt: integer("last_used_at", { mode: "timestamp" }),
-    createdAt: integer("created_at", { mode: "timestamp" })
-      .notNull()
-      .default(sql`(unixepoch())`),
-    revokedAt: integer("revoked_at", { mode: "timestamp" }),
-  },
-  (t) => [index("api_tokens_user_id_idx").on(t.userId)]
-);
-
 export const reports = sqliteTable(
   "reports",
   {

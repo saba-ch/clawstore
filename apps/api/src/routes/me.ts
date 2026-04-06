@@ -3,10 +3,9 @@ import { eq } from "drizzle-orm";
 import { profiles, packages } from "../db/schema";
 import { requireAuth } from "../middleware/auth";
 import type { AppEnv } from "../types";
-import type { AuthUser } from "../middleware/auth";
 import { count } from "drizzle-orm";
 
-const app = new Hono<AppEnv & { Variables: { user: AuthUser | null } }>();
+const app = new Hono<AppEnv>();
 
 // GET /v1/me — current user's identity and profile
 app.get("/me", async (c) => {

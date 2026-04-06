@@ -4,9 +4,8 @@ import { profiles, packages } from "../db/schema";
 import { requireAuth } from "../middleware/auth";
 import { AppError } from "../lib/errors";
 import type { AppEnv } from "../types";
-import type { AuthUser } from "../middleware/auth";
 
-const app = new Hono<AppEnv & { Variables: { user: AuthUser | null } }>();
+const app = new Hono<AppEnv>();
 
 // GET /v1/users/:username — public profile
 app.get("/users/:username", async (c) => {

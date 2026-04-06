@@ -1,5 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { bearer } from "better-auth/plugins";
+import { deviceAuthorization } from "better-auth/plugins";
 import { drizzle } from "drizzle-orm/d1";
 import * as authSchema from "./db/auth-schema";
 import type { Bindings } from "./types";
@@ -26,12 +28,18 @@ export function createAuth(env: Bindings, baseURL: string) {
       },
     },
     session: {
-      expiresIn: 60 * 60 * 24 * 7, // 7 days
+      expiresIn: 60 * 60 * 24 * 30, // 30 days
       updateAge: 60 * 60 * 24, // refresh every 24h
       cookieCache: {
-        enabled: false, // disabled — see better-auth-cloudflare known issues
+        enabled: false,
       },
     },
+    plugins: [
+      bearer(),
+      deviceAuthorization({
+        verificationUri: "/device",
+      }),
+    ],
   });
 }
 
