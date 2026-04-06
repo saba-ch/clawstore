@@ -16,16 +16,20 @@ export const Route = createFileRoute('/browse')({
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
-    const [agents, categories] = await Promise.all([
-      api.searchAgents({
-        category: deps.category,
-        tag: deps.tag,
-        sort: (deps.sort as any) ?? 'recent',
-        limit: 40,
-      }),
-      api.getCategories(),
-    ])
-    return { agents: agents.items, categories, filters: deps }
+    try {
+      const [agents, categories] = await Promise.all([
+        api.searchAgents({
+          category: deps.category,
+          tag: deps.tag,
+          sort: (deps.sort as any) ?? 'recent',
+          limit: 40,
+        }),
+        api.getCategories(),
+      ])
+      return { agents: agents.items, categories, filters: deps }
+    } catch {
+      return { agents: [], categories: [], filters: deps }
+    }
   },
   component: BrowsePage,
   errorComponent: ({ error }) => (

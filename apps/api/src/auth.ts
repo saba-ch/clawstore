@@ -96,7 +96,7 @@ export function createAuth(env: Bindings, baseURL: string) {
       bearer(),
       deviceAuthorization({
         verificationUri:
-          env.DEVICE_VERIFICATION_URI ?? "http://localhost:3000/device",
+          env.DEVICE_VERIFICATION_URI ?? "https://useclawstore.com/device",
       }),
     ],
   });

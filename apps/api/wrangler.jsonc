@@ -8,7 +8,7 @@
     {
       "binding": "Database",
       "database_name": "clawstore-db",
-      "database_id": "local",
+      "database_id": "c97ea390-62e3-4feb-9071-40eeb81762bf",
       "migrations_dir": "drizzle"
     }
   ],
@@ -21,7 +21,7 @@
   "kv_namespaces": [
     {
       "binding": "RateLimit",
-      "id": "local"
+      "id": "a252b67df392489781bfb58c802dda2a"
     }
   ]
 }

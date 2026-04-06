@@ -4,11 +4,15 @@ import type { Agent, Category } from '@clawstore/sdk'
 
 export const Route = createFileRoute('/')({
   loader: async () => {
-    const [agents, categories] = await Promise.all([
-      api.searchAgents({ sort: 'recent', limit: 6 }),
-      api.getCategories(),
-    ])
-    return { agents: agents.items, categories }
+    try {
+      const [agents, categories] = await Promise.all([
+        api.searchAgents({ sort: 'recent', limit: 6 }),
+        api.getCategories(),
+      ])
+      return { agents: agents.items, categories }
+    } catch {
+      return { agents: [], categories: [] }
+    }
   },
   component: HomePage,
   errorComponent: ({ error }) => (

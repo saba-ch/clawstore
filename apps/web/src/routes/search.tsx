@@ -12,8 +12,12 @@ export const Route = createFileRoute('/search')({
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
     if (!deps.q) return { agents: [], query: '' }
-    const result = await api.searchAgents({ q: deps.q, limit: 40 })
-    return { agents: result.items, query: deps.q }
+    try {
+      const result = await api.searchAgents({ q: deps.q, limit: 40 })
+      return { agents: result.items, query: deps.q }
+    } catch {
+      return { agents: [], query: deps.q ?? '' }
+    }
   },
   component: SearchPage,
   errorComponent: ({ error }) => (

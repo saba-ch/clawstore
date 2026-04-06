@@ -1,7 +1,15 @@
 {
   "name": "clawstore",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "description": "CLI for the ClawStore agent package registry",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saba-ch/clawstore.git"
+  },
+  "homepage": "https://github.com/saba-ch/clawstore#readme",
+  "bugs": {
+    "url": "https://github.com/saba-ch/clawstore/issues"
+  },
   "type": "module",
   "bin": {
     "clawstore": "./dist/index.js"
@@ -16,9 +24,6 @@
   },
   "dependencies": {
     "@clack/prompts": "^0.10.0",
-    "@clawstore/schema": "workspace:*",
-    "@clawstore/sdk": "workspace:*",
-    "@clawstore/validator": "workspace:*",
     "commander": "^13.1.0",
     "glob": "^13.0.6",
     "open": "^11.0.0",
@@ -26,6 +31,9 @@
     "tar": "^7.5.13"
   },
   "devDependencies": {
+    "@clawstore/schema": "workspace:*",
+    "@clawstore/sdk": "workspace:*",
+    "@clawstore/validator": "workspace:*",
     "@types/glob": "^9.0.0",
     "@types/node": "^22.0.0",
     "@types/semver": "^7.7.1",
