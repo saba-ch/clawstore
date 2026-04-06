@@ -52,6 +52,22 @@ function HomePage() {
         </div>
       </section>
 
+      {/* Getting Started banner */}
+      <section className="max-w-7xl mx-auto px-6 mb-16">
+        <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-1">New to Clawstore?</h3>
+            <p className="text-gray-400 text-sm">Learn how to install agents or publish your own in minutes.</p>
+          </div>
+          <a
+            href="https://docs.useclawstore.com"
+            className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-lg transition-colors text-sm shrink-0"
+          >
+            Read the docs
+          </a>
+        </div>
+      </section>
+
       {/* Categories */}
       <section className="max-w-7xl mx-auto px-6 mb-16">
         <h2 className="text-xl font-semibold text-white mb-4">Categories</h2>

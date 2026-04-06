@@ -1,0 +1,54 @@
+---
+title: Introduction
+description: What Clawstore is, who it's for, and how it works.
+slug: ""
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+Clawstore is a package registry and CLI for [OpenClaw](https://github.com/openclaw/openclaw) agents. Think **npm for AI agents** — search the store, install with one command, publish your own.
+
+## The problem
+
+You built a useful OpenClaw agent. It has a persona, a workspace full of reference knowledge, a few plugin dependencies, and the right operating instructions. It works. People want it.
+
+Today, the only way to share it is to tell someone "clone this repo, copy these files, install these plugins, set these env vars, then `openclaw agents add`." That's not distribution. That's a README and hope.
+
+## The solution
+
+Clawstore removes that wall. Publish your agent once with `clawstore publish`. Anyone can install it with one command:
+
+```bash
+clawstore install @someone/calorie-coach
+```
+
+The dependencies resolve, the secrets get prompted for, the workspace populates, OpenClaw registers the agent. One command in, one command out.
+
+## What it looks like
+
+```
+$ clawstore install @someone/calorie-coach
+
+Calorie Coach 0.3.1 by @someone
+Log meals by chat, get daily nutrition summaries
+
+This package will:
+  - create workspace at ~/.openclaw/workspace-calorie-coach
+  - install 1 required plugin: @someone/nutrition-api 1.2.0
+  - prompt for 1 secret: NUTRITIONIX_API_KEY
+  - register agent in OpenClaw with model openai/gpt-5.4
+
+Proceed? [Y/n] y
+
+Calorie Coach is ready.
+Start a session: openclaw chat calorie-coach
+```
+
+## Next steps
+
+<CardGrid>
+  <LinkCard title="Quick Start" description="Install the CLI and run your first commands." href="/getting-started/quick-start/" />
+  <LinkCard title="Publishing Guide" description="Publish your agent to the store in 6 steps." href="/authors/publishing/" />
+  <LinkCard title="Installing Agents" description="Install, update, and manage agents." href="/operators/installing/" />
+  <LinkCard title="CLI Reference" description="Every command, flag, and exit code." href="/reference/cli/" />
+</CardGrid>

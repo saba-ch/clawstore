@@ -56,6 +56,12 @@ function AgentDetailPage() {
         <code className="text-cyan-400 text-sm">
           clawstore install @{agent.scope}/{agent.name}
         </code>
+        <div className="text-xs text-gray-500 mt-2">
+          First time?{' '}
+          <a href="https://docs.useclawstore.com/operators/installing" className="text-cyan-400 hover:text-cyan-300">
+            Read the install guide
+          </a>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -156,6 +162,17 @@ function AgentDetailPage() {
                 </a>
               )}
             </div>
+          </section>
+
+          {/* Publish CTA */}
+          <section className="mt-6 pt-6 border-t border-slate-700">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Want to publish?</h3>
+            <a
+              href="https://docs.useclawstore.com/authors/publishing"
+              className="text-sm text-cyan-400 hover:text-cyan-300"
+            >
+              Publishing guide &rarr;
+            </a>
           </section>
         </div>
       </div>

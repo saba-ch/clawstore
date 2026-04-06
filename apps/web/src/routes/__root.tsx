@@ -43,6 +43,12 @@ function RootComponent() {
             >
               Browse
             </Link>
+            <a
+              href="https://docs.useclawstore.com"
+              className="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              Docs
+            </a>
             <div className="flex-1" />
             <Link
               to="/search"

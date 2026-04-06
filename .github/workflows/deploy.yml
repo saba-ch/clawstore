@@ -43,6 +43,10 @@ jobs:
         run: npx wrangler deploy
         working-directory: apps/web
 
+      - name: Deploy Docs
+        run: npx wrangler pages deploy dist --project-name=clawstore-docs
+        working-directory: apps/docs
+
       - name: Smoke test
         run: |
           sleep 5
