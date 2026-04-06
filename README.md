@@ -146,8 +146,3 @@ clawstore/
 | [Trust & moderation](docs/trust-and-moderation.md) | Reporting, yanking, verification |
 | [OpenClaw integration](docs/openclaw-integration.md) | How agents run after install |
 
----
-
-<p align="center">
-  Built by <a href="https://github.com/saba-ch"><strong>Saba</strong></a> · MIT License
-</p>
