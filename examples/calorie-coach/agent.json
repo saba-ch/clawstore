@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "@example/calorie-coach",
+  "id": "@saba-ch/calorie-coach",
   "version": "0.1.0",
   "name": "Calorie Coach",
   "tagline": "Log meals by chat, get daily nutrition summaries",

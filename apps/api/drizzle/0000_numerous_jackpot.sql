@@ -199,4 +199,16 @@ CREATE TABLE `versions` (
 --> statement-breakpoint
 CREATE UNIQUE INDEX `versions_agent_version_idx` ON `versions` (`agent_id`,`version`);--> statement-breakpoint
 CREATE INDEX `versions_agent_uploaded_idx` ON `versions` (`agent_id`,`uploaded_at`);--> statement-breakpoint
-CREATE INDEX `versions_yanked_at_idx` ON `versions` (`yanked_at`);
+CREATE INDEX `versions_yanked_at_idx` ON `versions` (`yanked_at`);--> statement-breakpoint
+INSERT INTO `categories` (`id`, `name`, `icon`, `sort_order`) VALUES ('productivity', 'Productivity', 'briefcase', 1);--> statement-breakpoint
+INSERT INTO `categories` (`id`, `name`, `icon`, `sort_order`) VALUES ('developer-tools', 'Developer Tools', 'code', 2);--> statement-breakpoint
+INSERT INTO `categories` (`id`, `name`, `icon`, `sort_order`) VALUES ('health-fitness', 'Health & Fitness', 'heart', 3);--> statement-breakpoint
+INSERT INTO `categories` (`id`, `name`, `icon`, `sort_order`) VALUES ('education', 'Education', 'book', 4);--> statement-breakpoint
+INSERT INTO `categories` (`id`, `name`, `icon`, `sort_order`) VALUES ('finance', 'Finance', 'dollar', 5);--> statement-breakpoint
+INSERT INTO `categories` (`id`, `name`, `icon`, `sort_order`) VALUES ('communication', 'Communication', 'chat', 6);--> statement-breakpoint
+INSERT INTO `categories` (`id`, `name`, `icon`, `sort_order`) VALUES ('entertainment', 'Entertainment', 'play', 7);--> statement-breakpoint
+INSERT INTO `categories` (`id`, `name`, `icon`, `sort_order`) VALUES ('writing', 'Writing', 'pencil', 8);--> statement-breakpoint
+INSERT INTO `categories` (`id`, `name`, `icon`, `sort_order`) VALUES ('research', 'Research', 'search', 9);--> statement-breakpoint
+INSERT INTO `categories` (`id`, `name`, `icon`, `sort_order`) VALUES ('data-analysis', 'Data Analysis', 'chart', 10);--> statement-breakpoint
+INSERT INTO `categories` (`id`, `name`, `icon`, `sort_order`) VALUES ('customer-support', 'Customer Support', 'headset', 11);--> statement-breakpoint
+INSERT INTO `categories` (`id`, `name`, `icon`, `sort_order`) VALUES ('other', 'Other', 'box', 99);

@@ -52,24 +52,17 @@ export function createAuth(env: Bindings, baseURL: string) {
       account: {
         create: {
           after: async (account) => {
-            console.log("[profile-hook] account create fired, providerId:", account.providerId);
             if (account.providerId !== "github") return;
             if (!account.accessToken) return;
 
             try {
-              // Check if profile already exists
               const [existing] = await appDb
                 .select()
                 .from(profiles)
                 .where(eq(profiles.userId, account.userId))
                 .limit(1);
-              if (existing) {
-                console.log("[profile-hook] profile already exists");
-                return;
-              }
+              if (existing) return;
 
-              // Fetch the GitHub username from the API using the access token
-              console.log("[profile-hook] fetching github user...");
               const ghRes = await fetch("https://api.github.com/user", {
                 headers: {
                   Authorization: `Bearer ${account.accessToken}`,
@@ -77,18 +70,13 @@ export function createAuth(env: Bindings, baseURL: string) {
                   "User-Agent": "clawstore-api",
                 },
               });
-
-              if (!ghRes.ok) {
-                console.error("[profile-hook] GitHub API error:", ghRes.status, await ghRes.text());
-                return;
-              }
+              if (!ghRes.ok) return;
 
               const gh = (await ghRes.json()) as {
                 login: string;
                 avatar_url: string;
                 name: string | null;
               };
-              console.log("[profile-hook] got github login:", gh.login);
 
               await appDb.insert(profiles).values({
                 userId: account.userId,
@@ -96,9 +84,9 @@ export function createAuth(env: Bindings, baseURL: string) {
                 avatarUrl: gh.avatar_url,
                 displayName: gh.name,
               });
-              console.log("[profile-hook] profile created for", gh.login);
-            } catch (err) {
-              console.error("[profile-hook] error:", err);
+            } catch {
+              // Profile creation failure is non-fatal — user will see "unknown" scope
+              // and will need to re-login after a fix
             }
           },
         },

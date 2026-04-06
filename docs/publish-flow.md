@@ -76,10 +76,10 @@ The preview step catches the class of bugs that schema validation cannot: "the a
 $ clawstore login
 ```
 
-- First time: opens a browser, GitHub OAuth via Better Auth, the backend issues an API token scoped to the authenticated user, and the CLI stores it in the OS keychain (fallback: `~/.clawstore/auth.json` with `0600`).
+- First time: initiates the OAuth 2.0 Device Authorization flow. The CLI requests a device code, opens the browser to a `/device` page on the web frontend, where the operator signs in with GitHub and approves the device. The CLI polls for a bearer token and stores it in `~/.clawstore/auth.json` with `0600` permissions.
 - Subsequent invocations are silent — the token is already present.
 
-See [Auth and Ownership](auth-and-ownership.md) for the token lifecycle and how the CLI exchanges an OAuth session for a long-lived token.
+See [Auth and Ownership](auth-and-ownership.md) for the full device authorization flow.
 
 ## Step 6: `clawstore publish`
 

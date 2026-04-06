@@ -51,9 +51,15 @@ Refer to Better Auth's documentation for the full endpoint surface. Clawstore re
 
 ### Token auth (CLI)
 
-The CLI does not hold a session cookie — it holds an **API token**. Token creation, listing, and revocation are handled by Better Auth's **bearer** plugin via the `/api/auth/token` endpoints. Tokens are scoped to the issuing user and presented via `Authorization: Bearer <token>` on every request. Clawstore adds no custom token routes.
+The CLI authenticates via the **OAuth 2.0 Device Authorization** flow, implemented by Better Auth's `deviceAuthorization` plugin.
 
-`clawstore login` opens a browser to the web frontend, the operator approves, the web frontend calls the Better Auth bearer endpoint on their behalf, and the token is handed back to the CLI via a local-loopback callback. The token is stored in the OS keychain (or `~/.clawstore/auth.json` with `0600` permissions as a fallback).
+1. CLI calls `POST /api/auth/device/code` → receives `device_code`, `user_code`, `verification_uri_complete`.
+2. CLI opens the browser to the verification URL on the web frontend (`/device?user_code=...`).
+3. The operator signs in with GitHub (if needed) and clicks Approve on the device page, which calls `POST /api/auth/device/approve`.
+4. CLI polls `POST /api/auth/device/token` → receives `access_token` once approved.
+5. The token is stored in `~/.clawstore/auth.json` with `0600` permissions and presented via `Authorization: Bearer <token>` on every subsequent request.
+
+Clawstore adds no custom token routes — Better Auth's bearer and device authorization plugins handle the full lifecycle.
 
 ## API versioning
 
@@ -74,7 +80,7 @@ Better Auth routes live under `/api/auth/*` and are versioned independently by t
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/v1/me` | required | Return the authenticated user's identity and profile: `{ id, githubLogin, scope, createdAt, ownedAgentCount, profile: { bio, website, location, avatarUrl, displayName } }`. |
+| `GET` | `/v1/me` | required | Return the authenticated user's identity and profile: `{ id, name, email, image, scope, ownedAgentCount, profile: { bio, website, location, avatarUrl, displayName } }`. |
 
 ### User profiles
 
@@ -116,7 +122,7 @@ MVP search is `LIKE` with indexes on `name`, `tagline`, and `tags`. See [Data Mo
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `GET` | `/v1/agents/:scope/:name/versions/:version/tarball`             | none | Download the tarball. Content-addressed URL; `Cache-Control: public, max-age=31536000, immutable`. |
-| `GET` | `/v1/agents/:scope/:name/versions/:version/assets/:path`        | none | Serve an extracted asset (icon, screenshot). Same cache headers. |
+| `GET` | `/v1/agents/:scope/:name/versions/:version/assets/:assetId`     | none | Serve a store asset (icon, screenshot) by ID. Same cache headers. |
 
 Downloads increment a counter on the version row. Counters are bucketed per day and not blocked on — the request returns whether or not the counter write succeeds.
 

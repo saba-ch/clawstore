@@ -30,35 +30,23 @@ Clawstore adds no routes under `/api/auth/*`. Sign-out, session refresh, and CSR
 
 See [Backend API § Session auth (web)](backend-api.md#session-auth-web) for the endpoint table.
 
-## API tokens (CLI)
+## Bearer tokens (CLI)
 
-The CLI does not hold a session cookie. It holds an API token — an opaque bearer credential scoped to one user, presented via `Authorization: Bearer <token>` on every request.
+The CLI does not hold a session cookie. It holds a **bearer token** obtained through the OAuth 2.0 Device Authorization flow, presented via `Authorization: Bearer <token>` on every request. Better Auth's bearer plugin manages token creation and validation.
 
-The `clawstore login` loopback flow:
+### The `clawstore login` device flow
 
-1. CLI picks a high local port and starts a loopback HTTP listener at `http://127.0.0.1:<port>/callback`.
-2. CLI opens the operator's browser to `https://useclawstore.com/cli-login?port=<port>&state=<nonce>`.
-3. The operator authenticates with GitHub (Better Auth session is created on `useclawstore.com`).
-4. The web frontend shows a one-click confirm: "Authorize CLI on this machine?" On confirm, the web frontend calls `POST /v1/tokens` with the session cookie, gets a fresh token (shown exactly once), and POSTs it back to the loopback at `http://127.0.0.1:<port>/callback` with the same `state` nonce.
-5. The CLI validates the nonce, stores the token in the OS keychain (fallback: `~/.clawstore/auth.json` with `0600`), prints success, and closes the loopback listener.
-
-The loopback + nonce pattern is a standard CLI-OAuth dance. It keeps the token off the filesystem until the very last moment and makes the browser-to-CLI handoff safe against cross-site callers.
+1. CLI calls `POST /api/auth/device/code` with `{ client_id: "clawstore-cli" }`. The backend returns a `device_code`, `user_code`, and `verification_uri_complete`.
+2. CLI opens the operator's browser to the verification URL — a `/device` page on the web frontend that displays the user code.
+3. If the operator is not signed in, the page shows a "Sign in with GitHub" button. After GitHub OAuth, the page redirects back to `/device?user_code=...` with an active session cookie.
+4. The operator confirms the code matches what their terminal shows and clicks **Approve**. The web frontend calls `POST /api/auth/device/approve` with `{ userCode }`.
+5. Meanwhile, the CLI polls `POST /api/auth/device/token` with the `device_code`. Once the operator approves, this returns an `access_token`.
+6. The CLI stores the token in `~/.clawstore/auth.json` with `0600` permissions and prints success.
 
 ### Token lifetime
 
-- Tokens live until revoked. They do not expire on a clock.
-- Operators can list and revoke tokens from their `useclawstore.com` account page or via the CLI's `_debug` commands.
-- Revocation is immediate — the API Worker checks the token against D1 on every request, so a revoked token fails with 401 on its next use.
-
-### Token surface
-
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `POST`   | `/v1/tokens`     | session or token | Create a new API token. Body: `{ name, scopes? }`. Returns the token value exactly once. |
-| `GET`    | `/v1/tokens`     | session or token | List the caller's active tokens. Token value is never returned — only metadata. |
-| `DELETE` | `/v1/tokens/:id` | session or token | Revoke a token. |
-
-See [Backend API § Token auth (CLI)](backend-api.md#token-auth-cli) for the full contract.
+- Tokens are managed by Better Auth's bearer plugin and tied to the user's session.
+- Operators can sign out from the `useclawstore.com` web frontend to invalidate sessions.
 
 ## Scope derivation
 
@@ -79,7 +67,7 @@ Ownership is enforced on `POST /v1/publish`.
 
 ### The owner claim
 
-The first successful publish of a agent id writes a row to `packages` with `owner_user_id = caller.id`. Ownership is claimed atomically with the first version insert — no separate "register package" step.
+The first successful publish of an agent id writes a row to `agents` with `owner_user_id = caller.id`. Ownership is claimed atomically with the first version insert — no separate "register package" step.
 
 ### Publish authorization rules
 
@@ -136,7 +124,6 @@ See [Data Model § Better Auth tables](data-model.md#better-auth-tables) for the
 ## Cross-references
 
 - [Backend API § Authentication](backend-api.md#authentication) — endpoint-level auth contracts
-- [Data Model § `api_tokens`](data-model.md#api_tokens) — token storage
 - [Publish Flow § Step 5](publish-flow.md#step-5-clawstore-login) — login from the author's perspective
 - [Trust and Moderation](trust-and-moderation.md) — the broader trust story
 - [Documentation hub](README.md)
