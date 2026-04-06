@@ -1,0 +1,16 @@
+{
+  "defaults": {
+    "chicken_breast": { "grams": 150, "description": "1 medium breast" },
+    "rice_cooked": { "cups": 1, "grams": 195, "description": "1 cup" },
+    "pasta_cooked": { "cups": 1, "grams": 140, "description": "1 cup" },
+    "salad_greens": { "cups": 2, "grams": 60, "description": "2 cups mixed" },
+    "bread_slice": { "grams": 30, "description": "1 slice" },
+    "cheese_slice": { "grams": 28, "description": "1 slice" },
+    "egg": { "grams": 50, "description": "1 large" },
+    "banana": { "grams": 118, "description": "1 medium" },
+    "apple": { "grams": 182, "description": "1 medium" },
+    "nuts_handful": { "grams": 28, "description": "1 oz / small handful" },
+    "milk_glass": { "cups": 1, "ml": 240, "description": "1 cup" },
+    "oil_drizzle": { "tbsp": 1, "ml": 15, "description": "1 tablespoon" }
+  }
+}

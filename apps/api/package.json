@@ -9,7 +9,8 @@
     "check-types": "tsc --noEmit",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push"
+    "db:migrate": "wrangler d1 migrations apply clawstore-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply clawstore-db --remote"
   },
   "dependencies": {
     "@clawstore/schema": "workspace:*",

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "@example/calorie-coach",
+  "version": "0.1.0",
+  "name": "Calorie Coach",
+  "tagline": "Log meals by chat, get daily nutrition summaries",
+  "description": "A friendly nutrition tracking agent. Describe what you ate and get instant calorie estimates, macro breakdowns, and daily summaries. Supports common foods, restaurant meals, and custom entries.",
+  "category": "health-fitness",
+  "tags": ["nutrition", "tracking", "wellness", "health"],
+  "author": { "name": "Clawstore Examples" },
+  "license": "MIT",
+  "agent": {
+    "defaults": {
+      "model": "openai/gpt-4o",
+      "thinking": "low"
+    }
+  },
+  "files": ["app/**"],
+  "dependencies": {
+    "providers": {
+      "any": ["openai", "anthropic"]
+    }
+  },
+  "store": {
+    "icon": "store/icon.png",
+    "screenshots": ["store/screenshots/chat.png"]
+  },
+  "openclaw": {
+    "entrypoints": {
+      "AGENTS.md": "app/AGENTS.md",
+      "SOUL.md": "app/SOUL.md",
+      "TOOLS.md": "app/TOOLS.md",
+      "IDENTITY.md": "app/IDENTITY.md"
+    },
+    "templates": {
+      "USER.md": "app/USER.template.md"
+    }
+  }
+}
