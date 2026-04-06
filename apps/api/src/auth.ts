@@ -1,7 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { bearer } from "better-auth/plugins";
-import { deviceAuthorization } from "better-auth/plugins";
+import { bearer, deviceAuthorization } from "better-auth/plugins";
 import { drizzle } from "drizzle-orm/d1";
 import * as authSchema from "./db/auth-schema";
 import type { Bindings } from "./types";
@@ -33,6 +32,9 @@ export function createAuth(env: Bindings, baseURL: string) {
       cookieCache: {
         enabled: false,
       },
+    },
+    experimental: {
+      joins: true,
     },
     plugins: [
       bearer(),

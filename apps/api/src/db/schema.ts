@@ -16,6 +16,10 @@ export {
   sessions,
   accounts,
   verifications,
+  deviceCodes,
+  usersRelations,
+  sessionsRelations,
+  accountsRelations,
 } from "./auth-schema";
 
 import { users } from "./auth-schema";

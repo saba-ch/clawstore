@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1775476423820,
-      "tag": "0000_sleepy_jetstream",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1775476952332,
-      "tag": "0001_nervous_misty_knight",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1775477176147,
-      "tag": "0002_good_mysterio",
+      "when": 1775477686406,
+      "tag": "0000_rainy_leper_queen",
       "breakpoints": true
     }
   ]
