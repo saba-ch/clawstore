@@ -7,6 +7,9 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC trusted publishing — no NPM_TOKEN needed
     steps:
       - uses: actions/checkout@v4
 
@@ -22,11 +25,14 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Build CLI
-        run: pnpm --filter clawstore build
+      # npm >=9.5 required for OIDC provenance
+      - run: npm install -g npm@latest
 
+      - name: Build all packages
+        run: pnpm build
+
+      # Uses npm trusted publishing (OIDC) — no token needed
+      # NODE_AUTH_TOKEN must NOT be set, otherwise npm uses it instead of OIDC
       - name: Publish to npm
-        run: npm publish --access public
+        run: npm publish --access public --provenance
         working-directory: apps/cli
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

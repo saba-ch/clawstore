@@ -24,6 +24,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Build all packages
+        run: pnpm build
+
       - name: Run D1 migrations
         run: npx wrangler d1 migrations apply clawstore-db --remote
         working-directory: apps/api
@@ -32,7 +35,7 @@ jobs:
         run: npx wrangler deploy --minify
         working-directory: apps/api
 
-      - name: Build Web
+      - name: Build Web with prod API URL
         run: VITE_API_URL=https://api.useclawstore.com/v1 pnpm build
         working-directory: apps/web
 
@@ -41,4 +44,6 @@ jobs:
         working-directory: apps/web
 
       - name: Smoke test
-        run: curl -f https://api.useclawstore.com/v1/health
+        run: |
+          sleep 5
+          curl -f https://api.useclawstore.com/v1/health
