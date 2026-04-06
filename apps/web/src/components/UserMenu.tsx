@@ -17,10 +17,13 @@ export function UserMenu() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    authClient.getSession().then(({ data }) => {
-      setSession(data);
-      setLoading(false);
-    });
+    authClient
+      .getSession()
+      .then(({ data }) => {
+        setSession(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) return null;

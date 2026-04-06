@@ -49,14 +49,14 @@ function HomePage() {
             {/* Left: text */}
             <div>
               <h1 className="text-4xl sm:text-5xl font-black text-white mb-5 tracking-tight leading-[1.1]">
-                The app store for{" "}
+                The agent store for{" "}
                 <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-                  AI agents.
+                  OpenClaw.
                 </span>
               </h1>
               <p className="text-base sm:text-lg text-gray-400 mb-8 leading-relaxed max-w-lg">
-                Browse, install, and publish agent packages. Versioned like npm,
-                built for OpenClaw.
+                A package registry for OpenClaw agents. Browse, install, and
+                publish agents.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <Link
