@@ -1,0 +1,24 @@
+{
+  "name": "clawstore",
+  "version": "0.0.1",
+  "description": "CLI for the ClawStore agent package registry",
+  "type": "module",
+  "bin": {
+    "clawstore": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^13.1.0",
+    "@clack/prompts": "^0.10.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.0",
+    "@types/node": "^22.0.0"
+  }
+}

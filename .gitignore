@@ -42,8 +42,20 @@ coverage/
 .cache/
 .eslintcache
 
+# SST
+.sst/
+sst-env.d.ts
+
+# Wrangler
+.wrangler/
+.dev.vars
+
 # Clawstore local dev artifacts (scratch workspaces, tarballs, staging dirs)
 .clawstore/
 *.tgz
 scratch/
 tmp/
+
+# TanStack Start
+.output/
+.vinxi/
