@@ -2,7 +2,6 @@
 // This is the contract between package authors and the backend.
 
 export const agentJsonSchema = {
-  $schema: "https://json-schema.org/draft/2020-12/schema",
   type: "object",
   required: [
     "schemaVersion",

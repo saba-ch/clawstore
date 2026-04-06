@@ -9,4 +9,10 @@ export default defineConfig({
   banner: {
     js: "#!/usr/bin/env node",
   },
+  // Bundle workspace packages into the CLI binary
+  noExternal: [
+    "@clawstore/sdk",
+    "@clawstore/validator",
+    "@clawstore/schema",
+  ],
 });
