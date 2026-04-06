@@ -24,7 +24,10 @@ export const Route = createRootRoute({
           "Browse, install, and manage AI agent packages for the OpenClaw ecosystem. Built by the community.",
       },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "stylesheet", href: appCss },
+    ],
   }),
   component: RootComponent,
 });
