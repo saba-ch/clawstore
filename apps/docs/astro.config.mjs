@@ -10,7 +10,7 @@ export default defineConfig({
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/saba-ch/clawstore' },
 			],
-			customCss: ['./src/custom.css'],
+
 			sidebar: [
 				{
 					label: 'Getting Started',
