@@ -1,13 +1,16 @@
-// Typed fetch client for the ClawStore API.
-// Used by both CLI and web frontend.
-// Full implementation in Phase 6.
-
-export interface ClientConfig {
-  baseUrl: string;
-  token?: string;
-  fetch?: typeof globalThis.fetch;
-}
-
-export function createClient(_config: ClientConfig) {
-  return {};
-}
+export { createClient } from "./client.js";
+export type { ClientConfig, ClawstoreClient } from "./client.js";
+export type {
+  Agent,
+  AgentDetail,
+  AgentVersion,
+  AgentVersionDetail,
+  Review,
+  ReviewListResponse,
+  UpdateCheck,
+  Category,
+  UserProfile,
+  CurrentUser,
+  PublishResult,
+  PaginatedResponse,
+} from "./types.js";
