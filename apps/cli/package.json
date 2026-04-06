@@ -1,12 +1,22 @@
 {
   "name": "clawstore",
-  "version": "0.1.2",
-  "description": "CLI for the ClawStore agent package registry",
+  "version": "0.1.3",
+  "description": "Clawstore — the app store for AI agents. Discover, install, and publish OpenClaw agents.",
+  "keywords": [
+    "openclaw",
+    "ai-agents",
+    "clawstore",
+    "package-manager",
+    "cli",
+    "agent-store",
+    "mcp",
+    "llm"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/saba-ch/clawstore.git"
   },
-  "homepage": "https://github.com/saba-ch/clawstore#readme",
+  "homepage": "https://useclawstore.com",
   "bugs": {
     "url": "https://github.com/saba-ch/clawstore/issues"
   },
