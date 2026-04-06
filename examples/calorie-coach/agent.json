@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "@saba-ch/calorie-coach",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "Calorie Coach",
   "tagline": "Log meals by chat, get daily nutrition summaries",
   "description": "A friendly nutrition tracking agent. Describe what you ate and get instant calorie estimates, macro breakdowns, and daily summaries. Supports common foods, restaurant meals, and custom entries.",
