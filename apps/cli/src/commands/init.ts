@@ -4,7 +4,7 @@ import { writeFile, readdir, mkdir } from "node:fs/promises";
 import { resolve, join, dirname } from "node:path";
 import { SCHEMA_VERSION } from "@clawstore/schema";
 import { getTemplateFiles } from "@clawstore/template";
-import { getClient } from "../lib/client.js";
+import { readAuth } from "../lib/config.js";
 
 const CANONICAL_ENTRYPOINTS = [
   "AGENTS.md",
@@ -74,17 +74,10 @@ export const initCommand = new Command("init")
       model: string;
     };
 
-    // Try to detect scope/author from logged-in user
-    let detectedScope: string | null = null;
-    let detectedAuthor: string | null = null;
-    try {
-      const client = await getClient();
-      const me = await client.getMe();
-      detectedScope = me.scope ?? null;
-      detectedAuthor = me.name ?? null;
-    } catch {
-      // Not logged in or API error — skip
-    }
+    // Read cached scope/author from auth.json (no API call needed)
+    const auth = await readAuth();
+    const detectedScope = auth?.scope ?? null;
+    const detectedAuthor = auth?.name ?? null;
 
     if (hasAllFlags) {
       // Validate inputs

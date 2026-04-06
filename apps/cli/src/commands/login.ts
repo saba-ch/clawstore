@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import * as p from "@clack/prompts";
-import { writeToken, readToken, getApiUrl } from "../lib/config.js";
+import { writeAuth, readToken, getApiUrl } from "../lib/config.js";
 import { createClient } from "@clawstore/sdk";
 
 export const loginCommand = new Command("login")
@@ -17,6 +17,8 @@ export const loginCommand = new Command("login")
           const baseUrl = await getApiUrl();
           const client = createClient({ baseUrl, token: existingToken });
           const me = await client.getMe();
+          // Re-cache user info in case it changed
+          await writeAuth({ token: existingToken, scope: me.scope ?? undefined, name: me.name ?? undefined });
           p.log.info(`Already logged in as ${me.scope ?? me.name}. Run with --force to re-authenticate.`);
           p.outro("");
           return;
@@ -91,7 +93,18 @@ export const loginCommand = new Command("login")
           access_token?: string;
         };
         if (tokenData.access_token) {
-          await writeToken(tokenData.access_token);
+          // Fetch user info and cache alongside token
+          let scope: string | undefined;
+          let name: string | undefined;
+          try {
+            const client = createClient({ baseUrl: apiUrl, token: tokenData.access_token });
+            const me = await client.getMe();
+            scope = me.scope ?? undefined;
+            name = me.name ?? undefined;
+          } catch {
+            // Non-critical — token still works
+          }
+          await writeAuth({ token: tokenData.access_token, scope, name });
           spinner.stop("Logged in successfully.");
           p.outro("Token saved to ~/.clawstore/auth.json");
           return;

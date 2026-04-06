@@ -15,12 +15,15 @@ const execFileAsync = promisify(execFile);
 /**
  * Downloads, verifies, extracts, and registers an agent.
  * Shared by `install` and `update` commands.
+ *
+ * @param skipRegister - Skip openclaw registration (e.g., during updates when the agent already exists)
  */
 export async function installAgent(
   client: ClawstoreClient,
   scope: string,
   name: string,
-  version: string
+  version: string,
+  opts?: { skipRegister?: boolean }
 ): Promise<void> {
   console.log(`Installing @${scope}/${name}@${version}...`);
 
@@ -74,6 +77,8 @@ export async function installAgent(
   );
 
   console.log(`\nInstalled to ${workspaceDir}`);
+
+  if (opts?.skipRegister) return;
 
   // Auto-register with openclaw
   try {

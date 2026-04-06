@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { createRequire } from "node:module";
 import { initCommand } from "./commands/init.js";
 import { validateCommand } from "./commands/validate.js";
 import { packCommand } from "./commands/pack.js";
@@ -12,12 +13,15 @@ import { installCommand } from "./commands/install.js";
 import { listCommand } from "./commands/list.js";
 import { updateCommand } from "./commands/update.js";
 
+const require = createRequire(import.meta.url);
+const { version } = require("../package.json");
+
 const program = new Command();
 
 program
   .name("clawstore")
   .description("CLI for the ClawStore agent package registry")
-  .version("0.1.6");
+  .version(version);
 
 // Author commands
 program.addCommand(initCommand);

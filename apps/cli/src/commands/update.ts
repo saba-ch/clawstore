@@ -78,7 +78,7 @@ export const updateCommand = new Command("update")
         const install = installs.find((i) => i.id === u.id);
         if (!install) continue;
         try {
-          await installAgent(client, install.scope, install.name, u.to);
+          await installAgent(client, install.scope, install.name, u.to, { skipRegister: true });
           console.log("");
         } catch (err: any) {
           console.error(`Failed to update ${u.id}: ${err.message}\n`);

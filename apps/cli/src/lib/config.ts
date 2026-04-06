@@ -30,17 +30,33 @@ export async function getApiUrl(): Promise<string> {
   return process.env.CLAWSTORE_API_URL ?? (await readConfig()).apiUrl ?? DEFAULT_API_URL;
 }
 
-export async function readToken(): Promise<string | null> {
+export interface AuthData {
+  token: string;
+  scope?: string;
+  name?: string;
+}
+
+export async function readAuth(): Promise<AuthData | null> {
   try {
     const raw = await readFile(AUTH_FILE, "utf-8");
     const data = JSON.parse(raw);
-    return data.token ?? null;
+    if (!data.token) return null;
+    return data as AuthData;
   } catch {
     return null;
   }
 }
 
-export async function writeToken(token: string): Promise<void> {
+export async function readToken(): Promise<string | null> {
+  const auth = await readAuth();
+  return auth?.token ?? null;
+}
+
+export async function writeAuth(data: AuthData): Promise<void> {
   await getConfigDir();
-  await writeFile(AUTH_FILE, JSON.stringify({ token }, null, 2), { mode: 0o600 });
+  await writeFile(AUTH_FILE, JSON.stringify(data, null, 2), { mode: 0o600 });
+}
+
+export async function writeToken(token: string): Promise<void> {
+  await writeAuth({ token });
 }
