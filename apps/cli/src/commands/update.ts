@@ -3,6 +3,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getClient } from "../lib/client.js";
 import { getConfigDir } from "../lib/config.js";
+import { installAgent } from "../lib/install-agent.js";
 
 export const updateCommand = new Command("update")
   .description("Check for and apply agent updates")
@@ -21,7 +22,12 @@ export const updateCommand = new Command("update")
     }
 
     // Load install records
-    const installs: Array<{ id: string; version: string; name: string }> = [];
+    const installs: Array<{
+      id: string;
+      version: string;
+      name: string;
+      scope: string;
+    }> = [];
     for (const file of files) {
       if (!file.endsWith(".json")) continue;
       try {
@@ -32,6 +38,7 @@ export const updateCommand = new Command("update")
             id: record.id,
             version: record.version,
             name: record.name,
+            scope: record.scope,
           });
         }
       } catch {
@@ -65,8 +72,18 @@ export const updateCommand = new Command("update")
         return;
       }
 
-      // TODO: implement actual update (download + atomic workspace swap)
-      console.log(`\nUpdate application not yet implemented. Use \`clawstore install <id>@<version>\` for now.`);
+      // Apply updates
+      console.log("");
+      for (const u of result.updates) {
+        const install = installs.find((i) => i.id === u.id);
+        if (!install) continue;
+        try {
+          await installAgent(client, install.scope, install.name, u.to);
+          console.log("");
+        } catch (err: any) {
+          console.error(`Failed to update ${u.id}: ${err.message}\n`);
+        }
+      }
     } catch (err: any) {
       const code = err.code ? `[${err.code}] ` : "";
       console.error(`Update check failed: ${code}${err.message}`);
