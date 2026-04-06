@@ -132,17 +132,20 @@ app.get("/:scope/:name/versions/:version/tarball", async (c) => {
     throw new AppError("tarball_not_found", "Tarball not found in storage", 404);
   }
 
-  // Best-effort download count increment
-  db.update(versions)
-    .set({ downloadCount: sql`${versions.downloadCount} + 1` })
-    .where(eq(versions.id, v.id))
-    .then(() =>
-      db
-        .update(agents)
-        .set({ downloadCount: sql`${agents.downloadCount} + 1` })
-        .where(eq(agents.id, agent.id))
-    )
-    .catch(() => {});
+  // Best-effort download count increment — use waitUntil so the worker
+  // stays alive long enough for the DB writes to complete.
+  c.executionCtx.waitUntil(
+    db.update(versions)
+      .set({ downloadCount: sql`${versions.downloadCount} + 1` })
+      .where(eq(versions.id, v.id))
+      .then(() =>
+        db
+          .update(agents)
+          .set({ downloadCount: sql`${agents.downloadCount} + 1` })
+          .where(eq(agents.id, agent.id))
+      )
+      .catch(() => {})
+  );
 
   return new Response(object.body, {
     headers: {
