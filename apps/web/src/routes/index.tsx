@@ -55,8 +55,8 @@ function HomePage() {
                 </span>
               </h1>
               <p className="text-base sm:text-lg text-gray-400 mb-8 leading-relaxed max-w-lg">
-                A package registry for OpenClaw agents. Browse, install, and
-                publish agents.
+                A registry for OpenClaw agents. Browse, install, and publish
+                agents.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <Link
