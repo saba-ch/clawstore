@@ -1,22 +1,20 @@
 import { Hono } from "hono";
-import { eq, and, desc, isNull } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import * as semver from "semver";
 import { validateManifestSchema, type AgentManifest } from "@clawstore/schema";
-import { requireAuth } from "../middleware/auth";
-import { AppError } from "../lib/errors";
-import { packages, versions, packageTags, versionAssets, profiles } from "../db/schema";
-import type { AppEnv } from "../types";
+import { requireAuth } from "../../middleware/auth";
+import { AppError } from "../../lib/errors";
+import { agents, versions, agentTags, versionAssets, profiles } from "../../db/schema";
+import type { AppEnv } from "../../types";
 
 const app = new Hono<AppEnv>();
 
-// POST /v1/publish — authenticated tarball upload
+// POST /agents/publish
 app.post("/publish", async (c) => {
   const user = requireAuth(c);
   if (!("id" in user)) return user;
 
   const db = c.var.db;
-
-  // Parse multipart form data
   const formData = await c.req.formData();
   const metadataRaw = formData.get("metadata");
   const tarball = formData.get("tarball");
@@ -27,9 +25,11 @@ app.post("/publish", async (c) => {
   if (!tarball || typeof tarball === "string") {
     throw new AppError("missing_tarball", "Missing tarball file part", 400);
   }
-  const tarballFile = tarball as unknown as { arrayBuffer(): Promise<ArrayBuffer> };
+  const tarballFile = tarball as unknown as {
+    arrayBuffer(): Promise<ArrayBuffer>;
+  };
 
-  // Parse and validate the manifest metadata
+  // Parse and validate manifest
   let manifest: AgentManifest;
   try {
     const parsed = JSON.parse(metadataRaw);
@@ -45,14 +45,16 @@ app.post("/publish", async (c) => {
     throw new AppError("invalid_metadata", "Could not parse metadata JSON", 400);
   }
 
-  // Extract scope and name from the manifest id (@scope/name)
-  const idMatch = manifest.id.match(/^@([a-z0-9-]+)\/([a-z0-9][a-z0-9-]*[a-z0-9])$/);
+  // Extract scope/name from @scope/name
+  const idMatch = manifest.id.match(
+    /^@([a-z0-9-]+)\/([a-z0-9][a-z0-9-]*[a-z0-9])$/
+  );
   if (!idMatch) {
     throw new AppError("invalid_id", "Invalid package ID format", 400);
   }
   const [, scope, name] = idMatch;
 
-  // Verify scope matches the user's GitHub login
+  // Verify scope matches user's GitHub login
   const [profile] = await db
     .select({ githubLogin: profiles.githubLogin })
     .from(profiles)
@@ -67,27 +69,23 @@ app.post("/publish", async (c) => {
     );
   }
 
-  // Check ownership: if the package exists, verify the caller is the owner
-  const [existingPkg] = await db
+  // Ownership check
+  const [existing] = await db
     .select()
-    .from(packages)
-    .where(and(eq(packages.scope, scope), eq(packages.name, name)))
+    .from(agents)
+    .where(and(eq(agents.scope, scope), eq(agents.name, name)))
     .limit(1);
 
-  if (existingPkg && existingPkg.ownerUserId !== user.id) {
-    throw new AppError(
-      "not_owner",
-      "You are not the owner of this package",
-      403
-    );
+  if (existing && existing.ownerUserId !== user.id) {
+    throw new AppError("not_owner", "You are not the owner of this agent", 403);
   }
 
-  // Version monotonicity: new version must be strictly greater
-  if (existingPkg) {
+  // Version monotonicity
+  if (existing) {
     const [latestVersion] = await db
       .select({ version: versions.version })
       .from(versions)
-      .where(eq(versions.packageId, existingPkg.id))
+      .where(eq(versions.agentId, existing.id))
       .orderBy(desc(versions.uploadedAt))
       .limit(1);
 
@@ -105,12 +103,11 @@ app.post("/publish", async (c) => {
     }
   }
 
-  // Read the tarball
+  // Read tarball
   const tarballBuffer = await tarballFile.arrayBuffer();
   const tarballBytes = new Uint8Array(tarballBuffer);
   const tarballSize = tarballBytes.byteLength;
 
-  // Size check
   if (tarballSize > 100 * 1024 * 1024) {
     throw new AppError(
       "tarball_too_large",
@@ -119,18 +116,15 @@ app.post("/publish", async (c) => {
     );
   }
 
-  // Compute SHA-256
+  // SHA-256
   const hashBuffer = await crypto.subtle.digest("SHA-256", tarballBytes);
   const tarballSha256 = Array.from(new Uint8Array(hashBuffer))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  // Determine channel
   const isPrerelease = semver.prerelease(manifest.version) !== null;
   const channel = isPrerelease ? "beta" : "community";
-
-  // Generate IDs
-  const packageId = existingPkg?.id ?? crypto.randomUUID();
+  const agentId = existing?.id ?? crypto.randomUUID();
   const versionId = crypto.randomUUID();
 
   // Upload tarball to R2
@@ -143,11 +137,43 @@ app.post("/publish", async (c) => {
     sha256: tarballSha256,
   });
 
-  // Persist to database
-  if (!existingPkg) {
-    // Create new package
-    await db.insert(packages).values({
-      id: packageId,
+  // Upload store assets (icon, screenshots) from separate form parts
+  for (const [key, value] of formData.entries()) {
+    if (key === "metadata" || key === "tarball") continue;
+    if (typeof value === "string") continue;
+
+    const file = value as File;
+    const kind = key === "icon" ? "icon" : "screenshot";
+    const assetBytes = new Uint8Array(await file.arrayBuffer());
+    const assetHashBuf = await crypto.subtle.digest("SHA-256", assetBytes);
+    const assetHash = Array.from(new Uint8Array(assetHashBuf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    const assetR2Key = `assets/${scope}/${name}/${manifest.version}/${key}`;
+
+    await c.env.Tarballs.put(assetR2Key, assetBytes, {
+      httpMetadata: {
+        contentType: file.type || "application/octet-stream",
+        cacheControl: "public, max-age=31536000, immutable",
+      },
+    });
+
+    await db.insert(versionAssets).values({
+      id: crypto.randomUUID(),
+      versionId,
+      kind,
+      r2Key: assetR2Key,
+      contentType: file.type || "application/octet-stream",
+      sizeBytes: assetBytes.byteLength,
+      sha256: assetHash,
+      ordering: kind === "icon" ? 0 : 1,
+    });
+  }
+
+  // Persist agent + version
+  if (!existing) {
+    await db.insert(agents).values({
+      id: agentId,
       scope,
       name,
       ownerUserId: user.id,
@@ -161,9 +187,8 @@ app.post("/publish", async (c) => {
       license: manifest.license,
     });
   } else {
-    // Update existing package metadata from the new version
     await db
-      .update(packages)
+      .update(agents)
       .set({
         ...(!isPrerelease ? { latestVersionId: versionId } : {}),
         category: manifest.category,
@@ -175,13 +200,12 @@ app.post("/publish", async (c) => {
         license: manifest.license,
         updatedAt: new Date(),
       })
-      .where(eq(packages.id, existingPkg.id));
+      .where(eq(agents.id, existing.id));
   }
 
-  // Insert version row
   await db.insert(versions).values({
     id: versionId,
-    packageId,
+    agentId,
     version: manifest.version,
     channel,
     manifest: JSON.stringify(manifest),
@@ -191,50 +215,23 @@ app.post("/publish", async (c) => {
     uploadedByUserId: user.id,
   });
 
-  // Update tags: delete old, insert new
-  await db.delete(packageTags).where(eq(packageTags.packageId, packageId));
+  // Update tags
+  await db.delete(agentTags).where(eq(agentTags.agentId, agentId));
   if (manifest.tags.length > 0) {
-    await db.insert(packageTags).values(
-      manifest.tags.map((tag) => ({ packageId, tag: tag.toLowerCase() }))
+    await db.insert(agentTags).values(
+      manifest.tags.map((tag) => ({ agentId, tag: tag.toLowerCase() }))
     );
-  }
-
-  // Extract and store assets (icon, screenshots)
-  if (manifest.store?.icon) {
-    const assetId = crypto.randomUUID();
-    const assetR2Key = `assets/${scope}/${name}/${manifest.version}/${manifest.store.icon}`;
-    // Note: actual asset extraction from tarball would happen here.
-    // For MVP, we record the metadata; the tarball download serves as the source.
-    await db.insert(versionAssets).values({
-      id: assetId,
-      versionId,
-      kind: "icon",
-      path: manifest.store.icon,
-      r2Key: assetR2Key,
-      contentType: guessContentType(manifest.store.icon),
-      sizeBytes: 0, // Populated when extracted from tarball
-      sha256: "",
-      ordering: 0,
-    });
   }
 
   return c.json({
     id: manifest.id,
     version: manifest.version,
-    packageId,
+    agentId,
     versionId,
     channel,
     tarballSha256,
     tarballSizeBytes: tarballSize,
   });
 });
-
-function guessContentType(path: string): string {
-  if (path.endsWith(".png")) return "image/png";
-  if (path.endsWith(".jpg") || path.endsWith(".jpeg")) return "image/jpeg";
-  if (path.endsWith(".svg")) return "image/svg+xml";
-  if (path.endsWith(".webp")) return "image/webp";
-  return "application/octet-stream";
-}
 
 export default app;

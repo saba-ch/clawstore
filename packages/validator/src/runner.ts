@@ -9,7 +9,6 @@ import {
   checkTotalSize,
   checkFileCount,
   checkFileSize,
-  checkStoreAssets,
 } from "./checks.js";
 import { isTextFile } from "./utils.js";
 
@@ -48,11 +47,7 @@ export async function runValidation(
   const entrypointFindings = await checkEntrypoints(manifest, fs);
   errors.push(...entrypointFindings);
 
-  // 5. Store asset verification
-  const storeFindings = await checkStoreAssets(manifest, fs);
-  warnings.push(...storeFindings);
-
-  // 6. Per-file checks
+  // 5. Per-file checks
   let totalSize = 0;
 
   for (const filePath of files) {
@@ -80,7 +75,7 @@ export async function runValidation(
     }
   }
 
-  // 7. Total package size
+  // 6. Total package size
   push(checkTotalSize(totalSize));
 
   return {

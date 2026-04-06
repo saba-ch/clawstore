@@ -26,8 +26,8 @@ import { users } from "./auth-schema";
 
 // ── Clawstore tables ────────────────────────────────────────
 
-export const packages = sqliteTable(
-  "packages",
+export const agents = sqliteTable(
+  "agents",
   {
     id: text("id").primaryKey(), // UUID
     scope: text("scope").notNull(),
@@ -56,16 +56,16 @@ export const packages = sqliteTable(
       .default(sql`(unixepoch())`),
   },
   (t) => [
-    uniqueIndex("packages_scope_name_idx").on(t.scope, t.name),
-    index("packages_scope_idx").on(t.scope),
-    index("packages_name_idx").on(t.name),
-    index("packages_category_idx").on(t.category),
-    index("packages_owner_idx").on(t.ownerUserId),
-    index("packages_updated_at_idx").on(t.updatedAt),
-    index("packages_display_name_idx").on(t.displayName),
-    index("packages_tagline_idx").on(t.tagline),
-    index("packages_download_count_idx").on(t.downloadCount),
-    index("packages_avg_rating_idx").on(t.avgRating),
+    uniqueIndex("agents_scope_name_idx").on(t.scope, t.name),
+    index("agents_scope_idx").on(t.scope),
+    index("agents_name_idx").on(t.name),
+    index("agents_category_idx").on(t.category),
+    index("agents_owner_idx").on(t.ownerUserId),
+    index("agents_updated_at_idx").on(t.updatedAt),
+    index("agents_display_name_idx").on(t.displayName),
+    index("agents_tagline_idx").on(t.tagline),
+    index("agents_download_count_idx").on(t.downloadCount),
+    index("agents_avg_rating_idx").on(t.avgRating),
   ]
 );
 
@@ -73,9 +73,9 @@ export const versions = sqliteTable(
   "versions",
   {
     id: text("id").primaryKey(), // UUID
-    packageId: text("package_id")
+    agentId: text("agent_id")
       .notNull()
-      .references(() => packages.id),
+      .references(() => agents.id),
     version: text("version").notNull(), // SemVer string
     channel: text("channel").notNull(), // community | official | beta
     manifest: text("manifest").notNull(), // Full agent.json as JSON string
@@ -94,23 +94,23 @@ export const versions = sqliteTable(
     yankedReason: text("yanked_reason"),
   },
   (t) => [
-    uniqueIndex("versions_package_version_idx").on(t.packageId, t.version),
-    index("versions_package_uploaded_idx").on(t.packageId, t.uploadedAt),
+    uniqueIndex("versions_agent_version_idx").on(t.agentId, t.version),
+    index("versions_agent_uploaded_idx").on(t.agentId, t.uploadedAt),
     index("versions_yanked_at_idx").on(t.yankedAt),
   ]
 );
 
-export const packageTags = sqliteTable(
-  "package_tags",
+export const agentTags = sqliteTable(
+  "agent_tags",
   {
-    packageId: text("package_id")
+    agentId: text("agent_id")
       .notNull()
-      .references(() => packages.id),
+      .references(() => agents.id),
     tag: text("tag").notNull(),
   },
   (t) => [
-    primaryKey({ columns: [t.packageId, t.tag] }),
-    index("package_tags_tag_idx").on(t.tag),
+    primaryKey({ columns: [t.agentId, t.tag] }),
+    index("agent_tags_tag_idx").on(t.tag),
   ]
 );
 
@@ -122,7 +122,6 @@ export const versionAssets = sqliteTable(
       .notNull()
       .references(() => versions.id),
     kind: text("kind").notNull(), // icon | screenshot | other
-    path: text("path").notNull(),
     r2Key: text("r2_key").notNull(),
     contentType: text("content_type").notNull(),
     sizeBytes: integer("size_bytes").notNull(),
@@ -136,9 +135,9 @@ export const reports = sqliteTable(
   "reports",
   {
     id: text("id").primaryKey(), // UUID
-    packageId: text("package_id")
+    agentId: text("agent_id")
       .notNull()
-      .references(() => packages.id),
+      .references(() => agents.id),
     versionId: text("version_id").references(() => versions.id),
     reporterUserId: text("reporter_user_id").references(() => users.id),
     reporterIpHash: text("reporter_ip_hash").notNull(),
@@ -154,7 +153,7 @@ export const reports = sqliteTable(
   },
   (t) => [
     index("reports_status_created_idx").on(t.status, t.createdAt),
-    index("reports_package_id_idx").on(t.packageId),
+    index("reports_agent_id_idx").on(t.agentId),
     index("reports_ip_hash_idx").on(t.reporterIpHash),
   ]
 );
@@ -163,9 +162,9 @@ export const reviews = sqliteTable(
   "reviews",
   {
     id: text("id").primaryKey(), // UUID
-    packageId: text("package_id")
+    agentId: text("agent_id")
       .notNull()
-      .references(() => packages.id),
+      .references(() => agents.id),
     reviewerUserId: text("reviewer_user_id")
       .notNull()
       .references(() => users.id),
@@ -180,10 +179,10 @@ export const reviews = sqliteTable(
       .default(sql`(unixepoch())`),
   },
   (t) => [
-    uniqueIndex("reviews_package_user_idx").on(t.packageId, t.reviewerUserId),
-    index("reviews_package_id_idx").on(t.packageId),
+    uniqueIndex("reviews_agent_user_idx").on(t.agentId, t.reviewerUserId),
+    index("reviews_agent_id_idx").on(t.agentId),
     index("reviews_reviewer_idx").on(t.reviewerUserId),
-    index("reviews_package_created_idx").on(t.packageId, t.createdAt),
+    index("reviews_agent_created_idx").on(t.agentId, t.createdAt),
   ]
 );
 

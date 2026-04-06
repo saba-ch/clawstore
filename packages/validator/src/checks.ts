@@ -200,27 +200,6 @@ export function checkFileSize(filePath: string, sizeBytes: number): Finding | nu
   return null;
 }
 
-// ── Store asset verification ───────────────────────────────
-
-export async function checkStoreAssets(
-  manifest: AgentManifest,
-  fs: PackageFileSystem
-): Promise<Finding[]> {
-  const findings: Finding[] = [];
-  const files = new Set(await fs.listFiles());
-
-  if (manifest.store?.icon && !files.has(manifest.store.icon)) {
-    findings.push({
-      code: "store_icon_missing",
-      message: `Store icon "${manifest.store.icon}" does not exist in the package`,
-      path: manifest.store.icon,
-      severity: "warning",
-    });
-  }
-
-  return findings;
-}
-
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;

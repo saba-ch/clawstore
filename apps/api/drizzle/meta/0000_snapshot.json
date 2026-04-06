@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "6f2c8903-991e-4085-b506-233341c6f756",
+  "id": "d3f7ca45-4098-4e3b-b693-85ba6ef33cad",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "accounts": {
@@ -128,129 +128,11 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "categories": {
-      "name": "categories",
+    "agent_tags": {
+      "name": "agent_tags",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "icon": {
-          "name": "icon",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "sort_order": {
-          "name": "sort_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "device_codes": {
-      "name": "device_codes",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "device_code": {
-          "name": "device_code",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "user_code": {
-          "name": "user_code",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "last_polled_at": {
-          "name": "last_polled_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "polling_interval": {
-          "name": "polling_interval",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "client_id": {
-          "name": "client_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "scope": {
-          "name": "scope",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "package_tags": {
-      "name": "package_tags",
-      "columns": {
-        "package_id": {
-          "name": "package_id",
+        "agent_id": {
+          "name": "agent_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -265,8 +147,8 @@
         }
       },
       "indexes": {
-        "package_tags_tag_idx": {
-          "name": "package_tags_tag_idx",
+        "agent_tags_tag_idx": {
+          "name": "agent_tags_tag_idx",
           "columns": [
             "tag"
           ],
@@ -274,12 +156,12 @@
         }
       },
       "foreignKeys": {
-        "package_tags_package_id_packages_id_fk": {
-          "name": "package_tags_package_id_packages_id_fk",
-          "tableFrom": "package_tags",
-          "tableTo": "packages",
+        "agent_tags_agent_id_agents_id_fk": {
+          "name": "agent_tags_agent_id_agents_id_fk",
+          "tableFrom": "agent_tags",
+          "tableTo": "agents",
           "columnsFrom": [
-            "package_id"
+            "agent_id"
           ],
           "columnsTo": [
             "id"
@@ -289,19 +171,19 @@
         }
       },
       "compositePrimaryKeys": {
-        "package_tags_package_id_tag_pk": {
+        "agent_tags_agent_id_tag_pk": {
           "columns": [
-            "package_id",
+            "agent_id",
             "tag"
           ],
-          "name": "package_tags_package_id_tag_pk"
+          "name": "agent_tags_agent_id_tag_pk"
         }
       },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "packages": {
-      "name": "packages",
+    "agents": {
+      "name": "agents",
       "columns": {
         "id": {
           "name": "id",
@@ -428,72 +310,72 @@
         }
       },
       "indexes": {
-        "packages_scope_name_idx": {
-          "name": "packages_scope_name_idx",
+        "agents_scope_name_idx": {
+          "name": "agents_scope_name_idx",
           "columns": [
             "scope",
             "name"
           ],
           "isUnique": true
         },
-        "packages_scope_idx": {
-          "name": "packages_scope_idx",
+        "agents_scope_idx": {
+          "name": "agents_scope_idx",
           "columns": [
             "scope"
           ],
           "isUnique": false
         },
-        "packages_name_idx": {
-          "name": "packages_name_idx",
+        "agents_name_idx": {
+          "name": "agents_name_idx",
           "columns": [
             "name"
           ],
           "isUnique": false
         },
-        "packages_category_idx": {
-          "name": "packages_category_idx",
+        "agents_category_idx": {
+          "name": "agents_category_idx",
           "columns": [
             "category"
           ],
           "isUnique": false
         },
-        "packages_owner_idx": {
-          "name": "packages_owner_idx",
+        "agents_owner_idx": {
+          "name": "agents_owner_idx",
           "columns": [
             "owner_user_id"
           ],
           "isUnique": false
         },
-        "packages_updated_at_idx": {
-          "name": "packages_updated_at_idx",
+        "agents_updated_at_idx": {
+          "name": "agents_updated_at_idx",
           "columns": [
             "updated_at"
           ],
           "isUnique": false
         },
-        "packages_display_name_idx": {
-          "name": "packages_display_name_idx",
+        "agents_display_name_idx": {
+          "name": "agents_display_name_idx",
           "columns": [
             "display_name"
           ],
           "isUnique": false
         },
-        "packages_tagline_idx": {
-          "name": "packages_tagline_idx",
+        "agents_tagline_idx": {
+          "name": "agents_tagline_idx",
           "columns": [
             "tagline"
           ],
           "isUnique": false
         },
-        "packages_download_count_idx": {
-          "name": "packages_download_count_idx",
+        "agents_download_count_idx": {
+          "name": "agents_download_count_idx",
           "columns": [
             "download_count"
           ],
           "isUnique": false
         },
-        "packages_avg_rating_idx": {
-          "name": "packages_avg_rating_idx",
+        "agents_avg_rating_idx": {
+          "name": "agents_avg_rating_idx",
           "columns": [
             "avg_rating"
           ],
@@ -501,9 +383,9 @@
         }
       },
       "foreignKeys": {
-        "packages_owner_user_id_users_id_fk": {
-          "name": "packages_owner_user_id_users_id_fk",
-          "tableFrom": "packages",
+        "agents_owner_user_id_users_id_fk": {
+          "name": "agents_owner_user_id_users_id_fk",
+          "tableFrom": "agents",
           "tableTo": "users",
           "columnsFrom": [
             "owner_user_id"
@@ -514,9 +396,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "packages_category_categories_id_fk": {
-          "name": "packages_category_categories_id_fk",
-          "tableFrom": "packages",
+        "agents_category_categories_id_fk": {
+          "name": "agents_category_categories_id_fk",
+          "tableFrom": "agents",
           "tableTo": "categories",
           "columnsFrom": [
             "category"
@@ -528,6 +410,124 @@
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "categories": {
+      "name": "categories",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "icon": {
+          "name": "icon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "device_codes": {
+      "name": "device_codes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "device_code": {
+          "name": "device_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_code": {
+          "name": "user_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "last_polled_at": {
+          "name": "last_polled_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "polling_interval": {
+          "name": "polling_interval",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "client_id": {
+          "name": "client_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
@@ -639,8 +639,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "package_id": {
-          "name": "package_id",
+        "agent_id": {
+          "name": "agent_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -728,10 +728,10 @@
           ],
           "isUnique": false
         },
-        "reports_package_id_idx": {
-          "name": "reports_package_id_idx",
+        "reports_agent_id_idx": {
+          "name": "reports_agent_id_idx",
           "columns": [
-            "package_id"
+            "agent_id"
           ],
           "isUnique": false
         },
@@ -744,12 +744,12 @@
         }
       },
       "foreignKeys": {
-        "reports_package_id_packages_id_fk": {
-          "name": "reports_package_id_packages_id_fk",
+        "reports_agent_id_agents_id_fk": {
+          "name": "reports_agent_id_agents_id_fk",
           "tableFrom": "reports",
-          "tableTo": "packages",
+          "tableTo": "agents",
           "columnsFrom": [
-            "package_id"
+            "agent_id"
           ],
           "columnsTo": [
             "id"
@@ -811,8 +811,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "package_id": {
-          "name": "package_id",
+        "agent_id": {
+          "name": "agent_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -864,18 +864,18 @@
         }
       },
       "indexes": {
-        "reviews_package_user_idx": {
-          "name": "reviews_package_user_idx",
+        "reviews_agent_user_idx": {
+          "name": "reviews_agent_user_idx",
           "columns": [
-            "package_id",
+            "agent_id",
             "reviewer_user_id"
           ],
           "isUnique": true
         },
-        "reviews_package_id_idx": {
-          "name": "reviews_package_id_idx",
+        "reviews_agent_id_idx": {
+          "name": "reviews_agent_id_idx",
           "columns": [
-            "package_id"
+            "agent_id"
           ],
           "isUnique": false
         },
@@ -886,22 +886,22 @@
           ],
           "isUnique": false
         },
-        "reviews_package_created_idx": {
-          "name": "reviews_package_created_idx",
+        "reviews_agent_created_idx": {
+          "name": "reviews_agent_created_idx",
           "columns": [
-            "package_id",
+            "agent_id",
             "created_at"
           ],
           "isUnique": false
         }
       },
       "foreignKeys": {
-        "reviews_package_id_packages_id_fk": {
-          "name": "reviews_package_id_packages_id_fk",
+        "reviews_agent_id_agents_id_fk": {
+          "name": "reviews_agent_id_agents_id_fk",
           "tableFrom": "reviews",
-          "tableTo": "packages",
+          "tableTo": "agents",
           "columnsFrom": [
-            "package_id"
+            "agent_id"
           ],
           "columnsTo": [
             "id"
@@ -1179,13 +1179,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "path": {
-          "name": "path",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "r2_key": {
           "name": "r2_key",
           "type": "text",
@@ -1262,8 +1255,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "package_id": {
-          "name": "package_id",
+        "agent_id": {
+          "name": "agent_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1357,18 +1350,18 @@
         }
       },
       "indexes": {
-        "versions_package_version_idx": {
-          "name": "versions_package_version_idx",
+        "versions_agent_version_idx": {
+          "name": "versions_agent_version_idx",
           "columns": [
-            "package_id",
+            "agent_id",
             "version"
           ],
           "isUnique": true
         },
-        "versions_package_uploaded_idx": {
-          "name": "versions_package_uploaded_idx",
+        "versions_agent_uploaded_idx": {
+          "name": "versions_agent_uploaded_idx",
           "columns": [
-            "package_id",
+            "agent_id",
             "uploaded_at"
           ],
           "isUnique": false
@@ -1382,12 +1375,12 @@
         }
       },
       "foreignKeys": {
-        "versions_package_id_packages_id_fk": {
-          "name": "versions_package_id_packages_id_fk",
+        "versions_agent_id_agents_id_fk": {
+          "name": "versions_agent_id_agents_id_fk",
           "tableFrom": "versions",
-          "tableTo": "packages",
+          "tableTo": "agents",
           "columnsFrom": [
-            "package_id"
+            "agent_id"
           ],
           "columnsTo": [
             "id"

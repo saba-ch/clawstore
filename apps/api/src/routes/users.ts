@@ -1,13 +1,50 @@
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
-import { profiles, packages } from "../db/schema";
+import { eq, count } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth";
 import { AppError } from "../lib/errors";
+import { agents, profiles } from "../db/schema";
 import type { AppEnv } from "../types";
 
 const app = new Hono<AppEnv>();
 
-// GET /v1/users/:username — public profile
+// GET /me
+app.get("/me", async (c) => {
+  const user = requireAuth(c);
+  if (!("id" in user)) return user;
+
+  const db = c.var.db;
+
+  const [profile] = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.userId, user.id))
+    .limit(1);
+
+  const [agentCount] = await db
+    .select({ count: count() })
+    .from(agents)
+    .where(eq(agents.ownerUserId, user.id));
+
+  return c.json({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    image: user.image,
+    scope: profile?.githubLogin ?? null,
+    ownedAgentCount: agentCount?.count ?? 0,
+    profile: profile
+      ? {
+          bio: profile.bio,
+          website: profile.website,
+          location: profile.location,
+          avatarUrl: profile.avatarUrl,
+          displayName: profile.displayName,
+        }
+      : null,
+  });
+});
+
+// GET /users/:username
 app.get("/users/:username", async (c) => {
   const username = c.req.param("username").toLowerCase();
   const db = c.var.db;
@@ -18,20 +55,18 @@ app.get("/users/:username", async (c) => {
     .where(eq(profiles.githubLogin, username))
     .limit(1);
 
-  if (!profile) {
-    throw new AppError("user_not_found", "User not found", 404);
-  }
+  if (!profile) throw new AppError("user_not_found", "User not found", 404);
 
-  const userPackages = await db
+  const userAgents = await db
     .select({
-      scope: packages.scope,
-      name: packages.name,
-      tagline: packages.tagline,
-      avgRating: packages.avgRating,
-      downloadCount: packages.downloadCount,
+      scope: agents.scope,
+      name: agents.name,
+      tagline: agents.tagline,
+      avgRating: agents.avgRating,
+      downloadCount: agents.downloadCount,
     })
-    .from(packages)
-    .where(eq(packages.ownerUserId, profile.userId));
+    .from(agents)
+    .where(eq(agents.ownerUserId, profile.userId));
 
   return c.json({
     githubLogin: profile.githubLogin,
@@ -41,11 +76,11 @@ app.get("/users/:username", async (c) => {
     website: profile.website,
     location: profile.location,
     createdAt: profile.createdAt,
-    packages: userPackages,
+    agents: userAgents,
   });
 });
 
-// PUT /v1/users/:username/profile — update own profile
+// PUT /users/:username/profile
 app.put("/users/:username/profile", async (c) => {
   const user = requireAuth(c);
   if (!("id" in user)) return user;
@@ -53,7 +88,6 @@ app.put("/users/:username/profile", async (c) => {
   const username = c.req.param("username").toLowerCase();
   const db = c.var.db;
 
-  // Verify the caller owns this profile
   const [profile] = await db
     .select()
     .from(profiles)
