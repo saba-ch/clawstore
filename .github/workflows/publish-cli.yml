@@ -31,6 +31,9 @@ jobs:
       - name: Build all packages
         run: pnpm build
 
+      - name: Copy root README to CLI package
+        run: cp README.md apps/cli/README.md
+
       # Uses npm trusted publishing (OIDC) — no token needed
       # NODE_AUTH_TOKEN must NOT be set, otherwise npm uses it instead of OIDC
       - name: Publish to npm
