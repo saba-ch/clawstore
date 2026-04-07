@@ -1,2 +1,0 @@
-- [Project Overview](project_overview.md) — Clawstore: app store for OpenClaw agents, tech stack, pre-code status as of 2026-04-06
-- [Verify Before Commit](feedback_verify_before_commit.md) — Always run and test locally before committing, don't just type-check

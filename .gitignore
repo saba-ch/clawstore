@@ -27,6 +27,9 @@ out/
 .env.*
 !.env.example
 
+# Claude Code
+.claude/
+
 # IDE / editors
 .vscode/
 .idea/
